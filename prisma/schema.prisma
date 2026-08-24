@@ -1,0 +1,213 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum BookCondition {
+  LIKE_NEW
+  VERY_GOOD
+  GOOD
+  ACCEPTABLE
+  DEFECTIVE
+}
+enum PublicationStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+enum AdminRole {
+  ADMIN
+  EDITOR
+}
+
+model Book {
+  id String @id @default(cuid())
+  title String
+  author String
+  isbn String? @unique
+  publisher String?
+  publicationYear Int?
+  language String @default("es")
+  format String?
+  pages Int?
+  condition BookCondition
+  description String?
+  defects String?
+  imageUrl String?
+  imageAlt String?
+  price Decimal
+  acquisitionCost Decimal?
+  stock Int @default(1)
+  slug String @unique
+  status PublicationStatus @default(DRAFT)
+  demoData Boolean @default(false)
+  amazonAffiliateUrl String?
+  categoryId String?
+  batchId String?
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  batch AcquisitionBatch? @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tags BookTag[]
+  cartItems CartItem[]
+  orderItems OrderItem[]
+  reviews Review[]
+  @@index([status, stock])
+  @@index([title])
+  @@index([author])
+  @@index([publisher])
+}
+
+model Category {
+  id String @id @default(cuid())
+  name String
+  slug String @unique
+  books Book[]
+}
+model Tag {
+  id String @id @default(cuid())
+  name String @unique
+  slug String @unique
+  books BookTag[]
+}
+model BookTag {
+  bookId String
+  tagId String
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  tag Tag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  @@id([bookId, tagId])
+}
+model Supplier {
+  id String @id @default(cuid())
+  name String
+  email String?
+  batches AcquisitionBatch[]
+}
+model AcquisitionBatch {
+  id String @id @default(cuid())
+  reference String @unique
+  acquiredAt DateTime
+  totalCost Decimal?
+  supplierId String?
+  supplier Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  books Book[]
+}
+model AdminUser {
+  id String @id @default(cuid())
+  email String @unique
+  passwordHash String
+  role AdminRole @default(EDITOR)
+  active Boolean @default(true)
+  sessions AdminSession[]
+  auditLogs AuditLog[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model AdminSession {
+  id String @id @default(cuid())
+  tokenHash String @unique
+  adminUserId String
+  expiresAt DateTime
+  adminUser AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@index([expiresAt])
+}
+model AuditLog {
+  id String @id @default(cuid())
+  action String
+  entity String
+  entityId String
+  metadata Json?
+  adminUserId String?
+  adminUser AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  @@index([entity, entityId])
+}
+model Customer {
+  id String @id @default(cuid())
+  email String @unique
+  name String
+  carts Cart[]
+  orders Order[]
+  createdAt DateTime @default(now())
+}
+model Cart {
+  id String @id @default(cuid())
+  customerId String?
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items CartItem[]
+  createdAt DateTime @default(now())
+  @@index([customerId])
+}
+model CartItem {
+  id String @id @default(cuid())
+  cartId String
+  bookId String
+  quantity Int @default(1)
+  cart Cart @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  book Book @relation(fields: [bookId], references: [id], onDelete: Restrict)
+  @@unique([cartId, bookId])
+}
+model Order {
+  id String @id @default(cuid())
+  number String @unique
+  customerId String?
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items OrderItem[]
+  payments Payment[]
+  shipment Shipment?
+  createdAt DateTime @default(now())
+}
+model OrderItem {
+  id String @id @default(cuid())
+  orderId String
+  bookId String?
+  titleSnapshot String
+  unitPrice Decimal
+  quantity Int
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  book Book? @relation(fields: [bookId], references: [id], onDelete: SetNull)
+}
+model Payment {
+  id String @id @default(cuid())
+  orderId String
+  provider String
+  providerPaymentId String?
+  order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
+}
+model Shipment {
+  id String @id @default(cuid())
+  orderId String @unique
+  status String @default("PENDING")
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+model Coupon {
+  id String @id @default(cuid())
+  code String @unique
+}
+
+model Review {
+  id String @id @default(cuid())
+  slug String @unique
+  title String
+  author String
+  synopsis String
+  content String
+  rating Int
+  coverUrl String?
+  coverAlt String?
+  amazonAffiliateUrl String?
+  instagramUrl String?
+  status PublicationStatus @default(DRAFT)
+  publishedAt DateTime?
+  bookId String?
+  book Book? @relation(fields: [bookId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([status, publishedAt])
+}
