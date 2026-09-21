@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Herramienta de build (generador de catalogo), no parte de la app.
+    "scripts/**",
   ]),
 ]);
 
