@@ -250,11 +250,21 @@ export function CartDrawer() {
                 className="whatsapp-order-button"
               >
                 <MessageCircle size={20} />
-                <span>Pedir por WhatsApp (Bizum)</span>
+                <span>Finalizar pedido por WhatsApp</span>
               </a>
 
+              <div className="cart-payment-badges" style={{ margin: "10px 0 6px", textAlign: "center" }}>
+                <p style={{ margin: "0 0 4px", fontSize: ".76rem", fontWeight: 700, color: "var(--charcoal-soft)" }}>
+                  💳 Métodos de pago aceptados:
+                </p>
+                <div style={{ display: "flex", justifyContent: "center", gap: "8px", flexWrap: "wrap", fontSize: ".72rem", color: "var(--muted)" }}>
+                  <span style={{ background: "rgba(37, 211, 102, 0.12)", color: "#128C7E", padding: "2px 8px", borderRadius: "6px", fontWeight: 600 }}>📲 Bizum</span>
+                  <span style={{ background: "var(--paper)", border: "1px solid var(--line)", padding: "2px 8px", borderRadius: "6px" }}>🏦 Transferencia</span>
+                  <span style={{ background: "var(--paper)", border: "1px solid var(--line)", padding: "2px 8px", borderRadius: "6px" }}>💶 En mano en Jerez</span>
+                </div>
+              </div>
               <p className="cart-guarantee">
-                💕 Trato directo con la librera · Pago seguro por Bizum · Confirmación al instante
+                🔒 Trato directo y cercano con la librera · Confirmación al instante
               </p>
 
               <button

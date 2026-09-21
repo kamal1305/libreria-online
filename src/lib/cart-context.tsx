@@ -120,6 +120,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             })`
       }`,
       `Total a pagar: ${total.toFixed(2).replace(".", ",")} €`,
+      "",
+      "Forma de pago preferida: Bizum / Transferencia / En mano",
     ];
 
     if (customerName) {
