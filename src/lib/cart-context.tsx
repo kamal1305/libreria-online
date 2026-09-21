@@ -37,7 +37,7 @@ type CartContextType = {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const STORAGE_KEY = "mas_que_libros_cart_v1";
-const DEFAULT_WHATSAPP = "34652409990";
+const DEFAULT_WHATSAPP = "34657053233";
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
@@ -114,7 +114,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       `Subtotal: ${subtotal.toFixed(2).replace(".", ",")} €`,
       `Método de entrega: ${
         deliveryMethod === "recogida"
-          ? "☕ Recogida local en Jerez (Gratis + Café de cortesía)"
+          ? "☕ Recogida local en Jerez (Gratis)"
           : `📦 Envío a domicilio peninsular (${
               isFreeShipping ? "¡GRATIS!" : "3,95 €"
             })`

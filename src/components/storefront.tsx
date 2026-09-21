@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Check,
   ChevronDown,
@@ -72,6 +72,12 @@ export function Storefront({
   const [price, setPrice] = useState("Cualquier precio");
   const [menuOpen, setMenuOpen] = useState(false);
   const { addItem, toggleCart } = useCart();
+  const [visibleLimit, setVisibleLimit] = useState(8);
+
+  // Al cambiar búsqueda o filtros, restablecer a 8 libros para no alargar la página
+  useEffect(() => {
+    setVisibleLimit(8);
+  }, [query, category, condition, price]);
 
   const categories = [
     "Todos",
@@ -81,9 +87,8 @@ export function Storefront({
     () =>
       books.filter((book) => {
         const q = normalize(query);
-        const matchesQuery =
-          !q ||
-          normalize(`${book.title} ${book.author}`).includes(q);
+        const searchPool = normalize(`${book.title} ${book.author} ${book.category} ${book.slug}`);
+        const matchesQuery = !q || searchPool.includes(q);
         const matchesCondition =
           condition === "Todas" ||
           conditionLabels[book.condition] === condition;
@@ -116,9 +121,7 @@ export function Storefront({
   return (
     <main className="min-h-screen bg-[var(--paper)] text-[var(--text)]">
       {/* Demo ribbon */}
-      <div className="demo-ribbon">
-        ✨ ENVÍO GRATIS A PARTIR DE 30 € · RECOGIDA LOCAL EN JEREZ CON CAFÉ DE CORTESÍA ☕ · ATENCIÓN DIRECTA POR WHATSAPP ✨
-      </div>
+      <div className="demo-ribbon">✨ ENVÍO GRATIS A PARTIR DE 30 € · PUNTO DE RECOGIDA EN JEREZ · ATENCIÓN DIRECTA POR WHATSAPP: 657 05 32 33 ✨</div>
 
       {/* Header */}
       <Header
@@ -266,7 +269,7 @@ export function Storefront({
       ═══════════════════════════════════════════════════════════ */}
       <section id="cafe" className="cafe-section">
         <div className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
-          <p className="eyebrow">MÁS QUE UNA LIBRERÍA</p>
+          <p className="eyebrow">NUESTRO SUEÑO · PRÓXIMA TIENDA FÍSICA</p>
           <h2
             style={{
               fontFamily: "var(--font-display)",
@@ -274,31 +277,27 @@ export function Storefront({
               fontWeight: 600,
               lineHeight: 1.15,
               letterSpacing: "-.015em",
-              margin: "0 0 32px",
+              margin: "0 0 16px",
               color: "var(--charcoal-soft)",
             }}
           >
-            Un rincón para quedarte,
-            <br />
-            <span style={{ color: "var(--rose-deep)" }}>
-              un café para disfrutar.
-            </span>
+            El futuro rincón de café y lectura en Jerez
           </h2>
+          <p style={{ maxWidth: 680, margin: "0 0 32px", color: "var(--muted)", fontSize: ".92rem", lineHeight: 1.6 }}>
+            Actualmente operamos como librería online con envíos a toda la península y punto de recogida en Jerez. Nuestro sueño y próximo paso es abrir un espacio físico en Jerez de la Frontera donde compartir cafés, helados y charlas entre páginas.
+          </p>
 
           <div className="cafe-grid">
-            {/* Café Nespresso */}
+            {/* Café */}
             <div className="cafe-card">
               <div className="cafe-icon">
                 <Coffee size={24} />
               </div>
-              <h3>Café Nespresso de cortesía</h3>
+              <h3>Rincón de café de especialidad</h3>
               <p>
-                Mientras hojeas las estanterías, disfruta de un café Nespresso
-                en nuestro rincón de lectura. Un espacio tranquilo diseñado
-                para que te quedes, descubras y te vayas con un libro bajo el
-                brazo.
+                Diseñado para cuando abramos la tienda física: un rincón acogedor donde poder sentarte con calma a disfrutar de una buena lectura y un café recién preparado.
               </p>
-              <span className="cafe-badge">☕ Cortesía para visitantes</span>
+              <span className="cafe-badge">📍 Proyecto tienda física en Jerez</span>
             </div>
 
             {/* Helados infantiles */}
@@ -306,13 +305,11 @@ export function Storefront({
               <div className="cafe-icon">
                 <IceCreamCone size={24} />
               </div>
-              <h3>Helados artesanales para los pequeños</h3>
+              <h3>Espacio familiar y dulce</h3>
               <p>
-                Los más pequeños tienen su propio rincón. Tarrinas de helado
-                artesanal precintadas mientras descubren cuentos y cómics en
-                la zona infantil. La lectura, siempre con algo dulce al lado.
+                Pensado para la futura apertura física en Jerez: que los más pequeños descubran cuentos, cómics y la magia de leer en un ambiente dulce, alegre y familiar.
               </p>
-              <span className="cafe-badge">🍨 Solo en tienda física</span>
+              <span className="cafe-badge">📍 Proyecto tienda física en Jerez</span>
             </div>
           </div>
         </div>
@@ -459,7 +456,56 @@ export function Storefront({
           </aside>
 
           <div>
-            <BookGrid books={filteredBooks} onAdd={addToCart} />
+            {/* Feedback de búsqueda activa */}
+            {query.trim() && (
+              <div className="mb-6 flex items-center justify-between p-3.5 rounded-2xl bg-[var(--mint-tint)] border border-[var(--sage-light)] text-sm">
+                <span>
+                  🔍 Búsqueda: <strong>"{query}"</strong> — <strong>{filteredBooks.length}</strong> {filteredBooks.length === 1 ? "libro encontrado" : "libros encontrados"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  className="text-xs font-bold text-[var(--sage-deep)] underline cursor-pointer ml-3"
+                >
+                  ✕ Limpiar búsqueda
+                </button>
+              </div>
+            )}
+
+            {/* Cuadrícula limitada para que no sea infinita */}
+            <BookGrid books={filteredBooks.slice(0, visibleLimit)} onAdd={addToCart} />
+
+            {/* Botón Ver más libros */}
+            {filteredBooks.length > visibleLimit && (
+              <div className="flex flex-col items-center justify-center mt-10 gap-2">
+                <button
+                  type="button"
+                  className="used-book-button"
+                  onClick={() => setVisibleLimit((prev) => prev + 12)}
+                  style={{ padding: "13px 32px", fontSize: ".96rem" }}
+                >
+                  Ver más libros (+{filteredBooks.length - visibleLimit} disponibles)
+                </button>
+                <span className="text-xs text-[var(--muted)]">
+                  Mostrando {Math.min(visibleLimit, filteredBooks.length)} de {filteredBooks.length} libros disponibles
+                </span>
+              </div>
+            )}
+
+            {visibleLimit > 8 && filteredBooks.length > 8 && (
+              <div className="text-center mt-3">
+                <button
+                  type="button"
+                  className="text-xs text-[var(--muted)] hover:underline cursor-pointer"
+                  onClick={() => {
+                    setVisibleLimit(8);
+                    document.getElementById("catalogo")?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                >
+                  ▲ Mostrar solo los primeros 8 libros
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </section>

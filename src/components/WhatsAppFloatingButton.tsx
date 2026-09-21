@@ -4,7 +4,7 @@ import React from "react";
 import { MessageCircle } from "lucide-react";
 
 export function WhatsAppFloatingButton() {
-  const whatsappNumber = "34652409990";
+  const whatsappNumber = "34657053233";
   const defaultText = encodeURIComponent(
     "¡Hola! Estaba mirando la web de Más que libros (Páginas y café) y me gustaría hacer una consulta o recomendación sobre un libro ☕📖"
   );

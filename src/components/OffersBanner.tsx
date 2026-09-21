@@ -3,7 +3,7 @@ import Link from "next/link";
 const offers = [
   { label: "Libros de lance", price: "desde 3,90 €", tone: "rose" },
   { label: "Envío GRATIS", price: "a partir de 30 €", tone: "mint" },
-  { label: "Recogida en Jerez", price: "0 € + Café ☕", tone: "butter" },
+  { label: "Recogida en Jerez", price: "0 € (Gratis)", tone: "butter" },
 ];
 
 export function OffersBanner() {

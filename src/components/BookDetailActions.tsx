@@ -25,7 +25,7 @@ export function BookDetailActions({ book }: BookDetailActionsProps) {
   const whatsappMsg = encodeURIComponent(
     `¡Hola! Me gustaría pedir el siguiente libro en Más que libros ☕📖:\n\n📚 *"${book.title}"* de ${book.author}\n💰 Precio: ${formattedPrice} €\n🏷️ Estado: Ejemplar de ocasión revisado\n\n¿Me facilitáis los datos para pagarlo por Bizum? ¡Muchas gracias! 💕`
   );
-  const whatsappUrl = `https://wa.me/34652409990?text=${whatsappMsg}`;
+  const whatsappUrl = `https://wa.me/34657053233?text=${whatsappMsg}`;
 
   return (
     <div className="book-actions-container mt-6">
@@ -78,7 +78,7 @@ export function BookDetailActions({ book }: BookDetailActionsProps) {
       <div className="mt-6 pt-5 border-t border-[var(--line)] grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-[var(--muted)]">
         <div className="flex items-center gap-2">
           <Coffee size={15} color="var(--sage)" />
-          <span>Recogida gratis en Jerez con café ☕</span>
+          <span>Punto de recogida gratis en Jerez</span>
         </div>
         <div className="flex items-center gap-2">
           <Truck size={15} color="var(--sage)" />

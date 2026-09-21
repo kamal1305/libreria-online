@@ -16,7 +16,7 @@ const navItems = [
 const instagramUrl =
   "https://www.instagram.com/escondida_en_un_libro_?igsi=MWpoanFsZjh0MWRzYg==";
 const whatsappUrl =
-  "https://wa.me/34652409990?text=Hola%2C%20quer%C3%ADa%20hacer%20una%20consulta%20en%20M%C3%A1s%20que%20libros%20%E2%98%95%F0%9F%93%96";
+  "https://wa.me/34657053233?text=Hola%2C%20quer%C3%ADa%20hacer%20una%20consulta%20en%20M%C3%A1s%20que%20libros%20%E2%98%95%F0%9F%93%96";
 
 type HeaderProps = {
   query: string;

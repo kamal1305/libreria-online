@@ -97,7 +97,7 @@ export function CartDrawer() {
                   <Coffee size={16} />
                   <span>
                     <strong>Recogida en Jerez</strong>
-                    <small>Gratis + Café ☕</small>
+                    <small>Punto de entrega gratis</small>
                   </span>
                 </button>
                 <button
