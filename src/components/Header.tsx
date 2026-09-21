@@ -6,10 +6,11 @@ import { Menu, MessageCircle, Search, ShoppingBag, UserRound, X } from "lucide-r
 import { useCart } from "@/lib/cart-context";
 
 const navItems = [
-  { label: "Recién llegados", href: "#novedades" },
   { label: "Catálogo", href: "#catalogo" },
+  { label: "Vender mis libros", href: "#vender" },
+  { label: "Club & Actividades", href: "#actividades" },
   { label: "Nuestra esencia", href: "#nosotros" },
-  { label: "Café & Rincón", href: "#cafe" },
+  { label: "Futura tienda física", href: "#cafe" },
   { label: "Reseñas", href: "/resenas", isPage: true },
 ];
 

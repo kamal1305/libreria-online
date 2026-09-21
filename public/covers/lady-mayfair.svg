@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 450" width="300" height="450">
+  <defs>
+    <!-- 3D Book Spine Shadow -->
+    <linearGradient id="spineShade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="rgba(0,0,0,0.28)"/>
+      <stop offset="4%" stop-color="rgba(255,255,255,0.18)"/>
+      <stop offset="8%" stop-color="rgba(0,0,0,0)"/>
+    </linearGradient>
+    <linearGradient id="pageShimmer" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E8B3AC"/>
+      <stop offset="100%" stop-color="#E8B3AC"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Base Cover with smooth rounded edges -->
+  <rect width="300" height="450" rx="8" fill="url(#pageShimmer)"/>
+
+  <!-- Outer Fine Gold / Accent Frame -->
+  <rect x="14" y="14" width="272" height="422" rx="4" fill="none" stroke="#F7DDD9" stroke-width="1.8" opacity="0.65"/>
+  <rect x="19" y="19" width="262" height="412" rx="2" fill="none" stroke="#F7DDD9" stroke-width="0.8" opacity="0.45"/>
+
+  <!-- Corner Vintage Ornaments -->
+  <path d="M22 28 L28 22 M278 28 L272 22 M22 422 L28 428 M278 422 L272 428" stroke="#FFFFFF" stroke-width="1.2" opacity="0.55"/>
+
+  <!-- Genre Pill Badge -->
+  <g transform="translate(150, 58)">
+    <rect x="-68" y="-14" width="136" height="28" rx="14" fill="rgba(255, 255, 255, 0.35)"/>
+    <text x="0" y="4.5" font-family="'Nunito Sans', sans-serif" font-size="10.5" font-weight="800" letter-spacing="0.14em" fill="#FFFFFF" text-anchor="middle">ROMANCE</text>
+  </g>
+
+  <!-- Decorative separator line -->
+  <path d="M115 105 Q150 115 185 105" stroke="#FFFFFF" stroke-width="1.2" fill="none" opacity="0.6"/>
+  <circle cx="150" cy="109" r="2.5" fill="#FFFFFF"/>
+
+  <!-- Book Title -->
+  <g>
+    <text x="150" y="175" font-family="'Fraunces', Georgia, serif" font-size="25" font-weight="600" fill="#462225" text-anchor="middle" letter-spacing="-0.01em">Lady Mayfair</text>
+  </g>
+
+  <!-- Author Separator Line -->
+  <line x1="105" y1="282" x2="195" y2="282" stroke="#FFFFFF" stroke-width="1" opacity="0.45"/>
+
+  <!-- Author Name -->
+  <g>
+    <text x="150" y="300" font-family="'Nunito Sans', -apple-system, sans-serif" font-size="13.5" font-weight="700" letter-spacing="0.1em" fill="#FFFFFF" text-anchor="middle">GEMMA DALTON</text>
+  </g>
+
+  <!-- Brand Signature Seal at bottom -->
+  <g transform="translate(150, 400)" opacity="0.9">
+    <circle cx="0" cy="0" r="14" fill="#F7DDD9" opacity="0.35"/>
+    <text x="0" y="4.5" font-size="13" text-anchor="middle">☕</text>
+    <text x="0" y="22" font-family="'Nunito Sans', sans-serif" font-size="8" font-weight="800" letter-spacing="0.16em" fill="#462225" opacity="0.8" text-anchor="middle">MÁS QUE LIBROS</text>
+  </g>
+
+  <!-- Realistic Spine 3D Shadow -->
+  <rect width="22" height="450" fill="url(#spineShade)"/>
+</svg>

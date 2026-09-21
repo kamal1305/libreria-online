@@ -203,19 +203,7 @@ export function Storefront({
       {/* ═══════════════════════════════════════════════════════════
           NOVEDADES
       ═══════════════════════════════════════════════════════════ */}
-      <section
-        id="novedades"
-        className="content-section mx-auto max-w-7xl px-5 py-8 lg:px-8"
-      >
-        <div className="section-header">
-          <div>
-            <p className="eyebrow">LO ÚLTIMO EN LLEGAR</p>
-            <h2>Novedades</h2>
-          </div>
-          <a href="#catalogo">Ver todo →</a>
-        </div>
-        <BookGrid books={books.slice(0, 4)} onAdd={addToCart} />
-      </section>
+      {/* Novedades unificadas en el catálogo principal */}
 
       {/* ═══════════════════════════════════════════════════════════
           RESEÑAS
@@ -513,7 +501,164 @@ export function Storefront({
       {/* ═══════════════════════════════════════════════════════════
           BENEFICIOS
       ═══════════════════════════════════════════════════════════ */}
-      <section className="benefits-band">
+      
+      {/* ── SECCIÓN COMPRAMOS TUS LIBROS USADOS ── */}
+      <section id="vender" className="vender-section mx-auto max-w-7xl px-5 py-16 lg:px-8 scroll-mt-10">
+        <div className="vender-card soft-dots">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <p className="eyebrow">ECONOMÍA CIRCULAR & LECTURA SOSTENIBLE</p>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.8rem, 3.5vw, 2.6rem)", fontWeight: 600, color: "var(--charcoal-soft)", margin: "0 0 14px", lineHeight: 1.15 }}>
+              ¿Tienes libros que ya has leído? <br />
+              <span style={{ color: "var(--rose-deep)" }}>Dales una segunda vida y gana dinero</span>
+            </h2>
+            <p style={{ color: "var(--text)", fontSize: ".95rem", lineHeight: 1.6 }}>
+              No dejes que tus libros acumulen polvo en la estantería. En <strong>Más que libros</strong> te los valoramos de forma justa, rápida y sin compromiso para que otros lectores puedan disfrutarlos.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            {/* Paso 1 */}
+            <div className="vender-step">
+              <div className="vender-step-num">1</div>
+              <h3>📸 Foto a los lomos</h3>
+              <p>
+                Coloca los libros juntos y haz una foto clara a los lomos con tu móvil donde se lean los títulos y autores.
+              </p>
+            </div>
+
+            {/* Paso 2 */}
+            <div className="vender-step">
+              <div className="vender-step-num">2</div>
+              <h3>💬 Valoración rápida</h3>
+              <p>
+                Envíanos la foto por WhatsApp al <strong>657 05 32 33</strong>. Te respondemos en menos de 24 horas con nuestra oferta de compra o canje.
+              </p>
+            </div>
+
+            {/* Paso 3 */}
+            <div className="vender-step">
+              <div className="vender-step-num">3</div>
+              <h3>💶 Pago o saldo extra</h3>
+              <p>
+                Te abonamos el dinero por <strong>Bizum o transferencia</strong>, o llévate un <strong>+20% extra en saldo</strong> para elegir libros de nuestro catálogo.
+              </p>
+            </div>
+          </div>
+
+          {/* CTA Box */}
+          <div className="vender-cta-box flex flex-col sm:flex-row items-center justify-between gap-6 p-6 rounded-2xl bg-[var(--paper)] border border-[var(--line)]">
+            <div>
+              <h4 style={{ margin: "0 0 4px", fontSize: "1.05rem", fontWeight: 700, color: "var(--charcoal-soft)" }}>
+                ¿Tienes un lote de libros para valorar?
+              </h4>
+              <p style={{ margin: 0, fontSize: ".82rem", color: "var(--muted)" }}>
+                Atención directa y cercana con la librera por WhatsApp. Recogida en Jerez o a domicilio en lotes grandes.
+              </p>
+            </div>
+            <a
+              href="https://wa.me/34657053233?text=%C2%A1Hola!%20Tengo%20libros%20en%20casa%20que%20ya%20he%20le%C3%ADdo%20y%20me%20gustar%C3%ADa%20que%20me%20los%20valor%C3%A9is%20para%20darles%20una%20segunda%20vida%20%F0%9F%93%9A%E2%9C%A8"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="whatsapp-order-button sm:w-auto shrink-0"
+              style={{ padding: "14px 26px" }}
+            >
+              <span>💬 Valorar mis libros por WhatsApp</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+
+      {/* ── SECCIÓN ACTIVIDADES, CLUB DE LECTURA & NOTICIAS ── */}
+      <section id="actividades" className="actividades-section mx-auto max-w-7xl px-5 py-16 lg:px-8 scroll-mt-10">
+        <div className="section-header">
+          <div>
+            <p className="eyebrow">COMUNIDAD LECTORA & EVENTOS</p>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.8rem, 3.2vw, 2.4rem)", fontWeight: 600, color: "var(--charcoal-soft)", margin: 0 }}>
+              Club de Lectura &amp; Actividades
+            </h2>
+          </div>
+          <span className="result-count">@escondida_en_un_libro_</span>
+        </div>
+
+        <p style={{ color: "var(--muted)", maxWidth: 650, margin: "10px 0 32px", fontSize: ".92rem", lineHeight: 1.6 }}>
+          En <strong>Más que libros</strong> no solo vendemos páginas: creamos comunidad. Participa en nuestras dinámicas literarias, comparte lecturas y disfruta de actividades pensadas para devoradores de historias.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Actividad 1: Club de Lectura */}
+          <div className="actividad-card">
+            <div className="actividad-badge">Mensual</div>
+            <div className="actividad-icon">📖</div>
+            <h3>Club de Lectura "Páginas y Café"</h3>
+            <p>
+              Leemos juntos un libro seleccionado cada mes por <strong>@escondida_en_un_libro_</strong>. Debate en directo por Instagram y tertulia presencial.
+            </p>
+            <span className="actividad-perk">✨ Ejemplar del club con descuento</span>
+          </div>
+
+          {/* Actividad 2: Gimcana Literaria */}
+          <div className="actividad-card">
+            <div className="actividad-badge">Especial Jerez</div>
+            <div className="actividad-icon">🗺️</div>
+            <h3>Gimcana: "Libros Escondidos en Jerez"</h3>
+            <p>
+              ¡Búsqueda del tesoro literaria! Escondemos libros de ocasión precintados en plazas y rincones bonitos de Jerez con pistas en Stories. ¡Quien lo encuentra se lo queda!
+            </p>
+            <span className="actividad-perk">🎁 Libros gratis con pistas en redes</span>
+          </div>
+
+          {/* Actividad 3: Cita a Ciegas con un Libro */}
+          <div className="actividad-card">
+            <div className="actividad-badge">Muy Popular</div>
+            <div className="actividad-icon">💌</div>
+            <h3>Cita a Ciegas con un Libro</h3>
+            <p>
+              Libros sorpresa envueltos en papel kraft con cuerda de yute y pistas misteriosas escritas a mano. ¡Déjate sorprender por tu próxima gran historia sin juzgar la portada!
+            </p>
+            <span className="actividad-perk">🤫 Pistas temáticas y marcapáginas</span>
+          </div>
+
+          {/* Actividad 4: Cajas Literarias & Bookjournaling */}
+          <div className="actividad-card">
+            <div className="actividad-badge">Talleres & Regalo</div>
+            <div className="actividad-icon">☕</div>
+            <h3>Cajas Literarias &amp; Bookjournaling</h3>
+            <p>
+              Packs regalo que combinan un libro de ocasión escogido según tus gustos, marcapáginas artesanal y detalles cuquis para tu diario de lectura.
+            </p>
+            <span className="actividad-perk">📦 El regalo perfecto para lectores</span>
+          </div>
+        </div>
+
+        {/* Banner de llamada a Instagram */}
+        <div className="mt-10 p-6 rounded-2xl bg-[var(--rose-tint)] border border-[var(--rose-pale)] flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--rose-deep)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.3rem" }}>
+              ✨
+            </div>
+            <div>
+              <strong style={{ display: "block", color: "var(--charcoal-soft)", fontSize: ".95rem" }}>
+                ¿Quieres participar en la próxima lectura conjunta o gimcana?
+              </strong>
+              <span style={{ fontSize: ".8rem", color: "var(--muted)" }}>
+                Publicamos todas las fechas y pistas en el perfil oficial de Instagram <strong>@escondida_en_un_libro_</strong>
+              </span>
+            </div>
+          </div>
+          <a
+            href="https://www.instagram.com/escondida_en_un_libro_?igsi=MWpoanFsZjh0MWRzYg=="
+            target="_blank"
+            rel="noopener noreferrer"
+            className="used-book-button sm:w-auto shrink-0"
+            style={{ padding: "10px 22px", fontSize: ".85rem" }}
+          >
+            Seguir @escondida_en_un_libro_
+          </a>
+        </div>
+      </section>
+
+<section className="benefits-band">
         <div className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
           <p className="eyebrow">COMPRAR CON SENTIDO</p>
           <h2>Una buena historia merece más de una oportunidad.</h2>
