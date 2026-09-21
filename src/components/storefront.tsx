@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Check,
   ChevronDown,
@@ -35,6 +35,7 @@ type StoreBook = {
   amazonAffiliateUrl: string | null;
 };
 type StoreReview = {
+  id?: string;
   slug: string;
   title: string;
   author: string;
@@ -42,6 +43,8 @@ type StoreReview = {
   coverUrl: string | null;
   coverAlt: string | null;
   synopsis: string;
+  content?: string;
+  instagramUrl?: string | null;
 };
 
 const conditionLabels: Record<string, string> = {
@@ -67,6 +70,13 @@ export function Storefront({
   reviews: StoreReview[];
 }) {
   const [query, setQuery] = useState("");
+  const reviewsScrollRef = useRef<HTMLDivElement>(null);
+  const scrollReviews = (direction: "left" | "right") => {
+    if (reviewsScrollRef.current) {
+      const amount = direction === "left" ? -370 : 370;
+      reviewsScrollRef.current.scrollBy({ left: amount, behavior: "smooth" });
+    }
+  };
   const [condition, setCondition] = useState("Todas");
   const [category, setCategory] = useState("Todos");
   const [price, setPrice] = useState("Cualquier precio");
@@ -210,46 +220,123 @@ export function Storefront({
       ═══════════════════════════════════════════════════════════ */}
       <section
         id="resenas"
-        className="reviews-section content-section mx-auto max-w-7xl px-5 py-24 lg:px-8"
+        className="reviews-section content-section mx-auto max-w-7xl px-5 py-20 lg:px-8"
       >
-        <div className="section-header">
+        <div className="reviews-header-flex">
           <div>
-            <p className="eyebrow">CLUB DE LECTURA</p>
-            <h2>Últimas reseñas</h2>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+              <span className="eyebrow" style={{ margin: 0 }}>BOOKSTAGRAM · @ESCONDIDA_EN_UN_LIBRO_</span>
+              <span style={{ fontSize: ".72rem", background: "rgba(193, 53, 132, .1)", color: "#C13584", padding: "2px 8px", borderRadius: "9999px", fontWeight: 700 }}>
+                ✨ Reseñas destacadas
+              </span>
+            </div>
+            <h2 style={{ margin: "0 0 6px" }}>Lecturas que nos han robado el corazón</h2>
+            <p style={{ margin: 0, fontSize: ".92rem", color: "var(--muted)", maxWidth: 640 }}>
+              Opiniones sinceras, apasionadas y sin spoilers de la librera. Desliza para descubrir tu próxima obsesión literaria.
+            </p>
           </div>
-          <Link href="/resenas">Ver todas →</Link>
+          <div className="reviews-controls hidden sm:flex">
+            <button
+              onClick={() => scrollReviews("left")}
+              className="review-scroll-arrow"
+              aria-label="Ver reseñas anteriores"
+              type="button"
+            >
+              ←
+            </button>
+            <button
+              onClick={() => scrollReviews("right")}
+              className="review-scroll-arrow"
+              aria-label="Ver más reseñas"
+              type="button"
+            >
+              →
+            </button>
+          </div>
         </div>
-        {reviews.length ? (
-          <div className="review-grid">
-            {reviews.map((review) => (
-              <Link
-                className="review-card"
-                href={`/resenas/${review.slug}`}
-                key={review.slug}
-              >
-                <div
-                  className="review-cover"
-                  style={{
-                    backgroundImage: `url(${review.coverUrl ?? ""})`,
-                  }}
-                  role="img"
-                  aria-label={review.coverAlt ?? "Portada de reseña"}
-                />
-                <div className="review-card-copy">
-                  <div className="stars">
-                    {"★".repeat(review.rating)}
-                    {"☆".repeat(5 - review.rating)}
+
+        <div ref={reviewsScrollRef} className="reviews-scroll-container">
+          {reviews.map((review) => (
+            <div key={review.id} className="ig-review-card">
+              {/* Cabecera estilo Instagram */}
+              <div className="ig-card-header">
+                <div className="ig-author-badge">
+                  <Image
+                    src="/logo.jpg"
+                    alt="Logo Escondida en un libro"
+                    width={36}
+                    height={36}
+                    className="ig-avatar"
+                  />
+                  <div>
+                    <span className="ig-user-name">escondida_en_un_libro_</span>
+                    <span className="ig-user-tag">Librera & reseñista</span>
                   </div>
-                  <h3>{review.title}</h3>
-                  <p>{review.author}</p>
-                  <span>Leer reseña</span>
                 </div>
-              </Link>
-            ))}
+                <span className="ig-rating-pill">
+                  ⭐ {review.rating}/5
+                </span>
+              </div>
+
+              {/* Libro reseñado */}
+              <div className="ig-book-row">
+                <div style={{ position: "relative", width: 72, height: 104, flexShrink: 0 }}>
+                  <Image
+                    src={review.coverUrl || "/covers/alas-de-sangre-empireo-1.svg"}
+                    alt={review.coverAlt || review.title}
+                    fill
+                    sizes="72px"
+                    className="ig-book-cover-img"
+                    style={{ objectFit: "cover" }}
+                  />
+                </div>
+                <div className="ig-book-details">
+                  <span className="ig-book-genre">{review.synopsis || "Lectura recomendada"}</span>
+                  <h3 className="ig-book-title">{review.title}</h3>
+                  <p className="ig-book-author">{review.author}</p>
+                </div>
+              </div>
+
+              {/* Fragmento de la reseña */}
+              <blockquote className="ig-review-quote">
+                &ldquo;{review.content}&rdquo;
+              </blockquote>
+
+              {/* Acción directa */}
+              <a
+                href={review.instagramUrl || instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ig-card-action"
+              >
+                <span>Ver reseña en Instagram</span>
+                <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+          ))}
+        </div>
+
+        {/* Tarjeta de llamada a Instagram: "Te han gustado, visita mi página allí hay más" */}
+        <div className="ig-more-banner">
+          <div className="ig-more-info">
+            <span className="ig-more-badge">
+              <InstagramMark /> Comunidad de lectura
+            </span>
+            <h3>¿Te han gustado estas reseñas? En mi Instagram hay muchas más 📚☕</h3>
+            <p>
+              Cada semana comparto recomendaciones en vídeo, unboxings de novedades que llegan a la librería, debates del club de lectura y fotos de cada rincón literario. ¡Únete a nuestra pequeña gran familia lectora!
+            </p>
           </div>
-        ) : (
-          <p className="empty-state">Pronto compartiremos nuevas lecturas.</p>
-        )}
+          <a
+            href={instagramUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ig-more-btn"
+          >
+            <InstagramMark />
+            <span>Visitar @escondida_en_un_libro_</span>
+          </a>
+        </div>
       </section>
 
       {/* ═══════════════════════════════════════════════════════════
@@ -546,12 +633,12 @@ export function Storefront({
           </div>
 
           {/* CTA Box */}
-          <div className="vender-cta-box flex flex-col sm:flex-row items-center justify-between gap-6 p-6 rounded-2xl bg-[var(--paper)] border border-[var(--line)]">
-            <div>
-              <h4 style={{ margin: "0 0 4px", fontSize: "1.05rem", fontWeight: 700, color: "var(--charcoal-soft)" }}>
+          <div className="vender-cta-box">
+            <div className="vender-cta-info">
+              <h4 className="vender-cta-title">
                 ¿Tienes un lote de libros para valorar?
               </h4>
-              <p style={{ margin: 0, fontSize: ".82rem", color: "var(--muted)" }}>
+              <p className="vender-cta-desc">
                 Atención directa y cercana con la librera por WhatsApp. Recogida en Jerez o a domicilio en lotes grandes.
               </p>
             </div>
@@ -559,8 +646,7 @@ export function Storefront({
               href="https://wa.me/34657053233?text=%C2%A1Hola!%20Tengo%20libros%20en%20casa%20que%20ya%20he%20le%C3%ADdo%20y%20me%20gustar%C3%ADa%20que%20me%20los%20valor%C3%A9is%20para%20darles%20una%20segunda%20vida%20%F0%9F%93%9A%E2%9C%A8"
               target="_blank"
               rel="noopener noreferrer"
-              className="whatsapp-order-button sm:w-auto shrink-0"
-              style={{ padding: "14px 26px" }}
+              className="vender-cta-btn"
             >
               <span>💬 Valorar mis libros por WhatsApp</span>
             </a>

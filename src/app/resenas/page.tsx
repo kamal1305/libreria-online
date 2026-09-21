@@ -3,9 +3,9 @@ import { db } from "@/lib/db";
 import { demoReviews, type PublicReview } from "@/lib/demo-data";
 
 export const metadata = {
-  title: "Reseñas | Segunda Vuelta Libros",
+  title: "Reseñas | Más que libros · Páginas y café",
   description:
-    "Lecturas comentadas por Segunda Vuelta Libros: reseñas con calma para encontrar tu próxima historia.",
+    "Lecturas comentadas por Más que libros · Páginas y café: reseñas con calma para encontrar tu próxima historia.",
 };
 
 export default async function ReviewsPage() {
@@ -43,11 +43,11 @@ export default async function ReviewsPage() {
       <header className="admin-page admin-header mx-auto flex max-w-7xl items-center justify-between border-b px-5 py-5 lg:px-8">
         <Link
           href="/"
-          className="brand-lockup"
-          style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem" }}
+          className="brand-lockup flex items-center gap-3"
+          style={{ fontFamily: "var(--font-display)", fontSize: "1.15rem", fontWeight: 700, textDecoration: "none" }}
         >
-          Segunda Vuelta{" "}
-          <span style={{ color: "var(--rose-deep)" }}> Libros</span>
+          <img src="/logo.jpg" alt="Logo Más que libros" style={{ width: 36, height: 36, borderRadius: "50%" }} />
+          <span>Más que libros <span style={{ color: "var(--rose-deep)", fontSize: ".85rem", fontWeight: 400 }}>· Páginas y café</span></span>
         </Link>
         <Link
           href="/"

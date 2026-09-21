@@ -37,13 +37,11 @@ export default async function ReviewDetail({
       >
         <Link
           href="/"
-          style={{
-            fontFamily: "var(--font-display)",
-            fontSize: "1.1rem",
-          }}
+          className="flex items-center gap-3"
+          style={{ fontFamily: "var(--font-display)", fontSize: "1.15rem", fontWeight: 700, textDecoration: "none" }}
         >
-          Segunda Vuelta{" "}
-          <span style={{ color: "var(--rose-deep)" }}>Libros</span>
+          <img src="/logo.jpg" alt="Logo Más que libros" style={{ width: 36, height: 36, borderRadius: "50%" }} />
+          <span>Más que libros <span style={{ color: "var(--rose-deep)", fontSize: ".85rem", fontWeight: 400 }}>· Páginas y café</span></span>
         </Link>
         <Link
           href="/resenas"
