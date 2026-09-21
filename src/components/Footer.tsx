@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { Mail, MapPin, MessageCircle, ShieldCheck, Truck, RefreshCw } from "lucide-react";
 
 const instagramUrl =
   "https://www.instagram.com/escondida_en_un_libro_?igsi=MWpoanFsZjh0MWRzYg==";
@@ -22,6 +22,7 @@ export function Footer() {
               width={54}
               height={54}
               className="brand-logo-img"
+              style={{ borderRadius: "50%" }}
             />
             <div>
               <p className="footer-brand m-0">
@@ -56,9 +57,6 @@ export function Footer() {
               <MessageCircle size={20} />
             </a>
           </div>
-          <small style={{ color: "var(--muted)", fontSize: ".68rem", display: "block", marginTop: 12 }}>
-            © 2026 Más que libros · Proyecto Escondida en un libro
-          </small>
         </div>
 
         {/* Contacto & WhatsApp */}
@@ -78,9 +76,9 @@ export function Footer() {
           </p>
         </div>
 
-        {/* Envíos y Condiciones */}
+        {/* Envíos & Ventajas */}
         <div className="footer-col">
-          <h3>Envíos & Ventajas</h3>
+          <h3>Envíos & Devoluciones</h3>
           <p style={{ fontSize: ".78rem", color: "var(--text)", margin: "0 0 6px" }}>
             ☕ <strong>Recogida en Jerez:</strong> GRATIS
           </p>
@@ -90,20 +88,49 @@ export function Footer() {
           <p style={{ fontSize: ".78rem", color: "var(--sage-deep)", margin: "0 0 12px", fontWeight: 700 }}>
             ✨ <strong>¡Envío GRATIS a partir de 30 €!</strong>
           </p>
-          <Link href="#envios">Gastos y plazos</Link>
-          <Link href="#privacidad">Privacidad y condiciones</Link>
+          <Link href="/envios-y-devoluciones" style={{ fontWeight: 600, color: "var(--rose-deep)" }}>
+            🚚 Gastos y plazos de envío →
+          </Link>
+          <Link href="/envios-y-devoluciones#devoluciones" style={{ fontWeight: 600, color: "var(--rose-deep)" }}>
+            🔄 Devoluciones y garantía (14 días) →
+          </Link>
         </div>
 
-        {/* Explora */}
+        {/* Legal & Explora */}
         <div className="footer-col">
-          <h3>Explora</h3>
-          <Link href="/resenas">Blog & Reseñas de libros</Link>
-          <Link href="#catalogo">Catálogo de 130 libros</Link>
-          <Link href="#cafe">El rincón del café</Link>
-          <Link href="#nosotros">Nuestra esencia</Link>
+          <h3>Legal & Comunidad</h3>
+          <Link href="/privacidad">Política de Privacidad (RGPD)</Link>
+          <Link href="/condiciones">Términos y Condiciones de compra</Link>
+          <Link href="/resenas">Club & Reseñas Bookstagram</Link>
+          <Link href="/#vender">Vender mis libros usados</Link>
           <Link href={instagramUrl} target="_blank" rel="noopener noreferrer">
             Instagram @escondida_en_un_libro_
           </Link>
+        </div>
+      </div>
+
+      {/* Legal sub-bar */}
+      <div
+        className="border-t py-6 px-5 text-center text-xs"
+        style={{ borderColor: "var(--line)", color: "var(--muted)", background: "var(--paper)" }}
+      >
+        <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="m-0">
+            © 2026 Más que libros · Páginas y café — Proyecto asociado a @escondida_en_un_libro_ (Jerez de la Frontera)
+          </p>
+          <div className="flex items-center gap-4">
+            <Link href="/envios-y-devoluciones" style={{ color: "inherit", textDecoration: "none" }}>
+              Envíos y Devoluciones
+            </Link>
+            <span>·</span>
+            <Link href="/privacidad" style={{ color: "inherit", textDecoration: "none" }}>
+              Privacidad
+            </Link>
+            <span>·</span>
+            <Link href="/condiciones" style={{ color: "inherit", textDecoration: "none" }}>
+              Condiciones
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
