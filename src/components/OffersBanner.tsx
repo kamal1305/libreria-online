@@ -1,25 +1,25 @@
 import Link from "next/link";
 
 const offers = [
-  { label: "1 libro", price: "3,90 €", tone: "rose" },
-  { label: "2 libros", price: "7 €", tone: "mint" },
-  { label: "4 libros", price: "12 €", tone: "butter" },
+  { label: "Libros de lance", price: "desde 3,90 €", tone: "rose" },
+  { label: "Envío GRATIS", price: "a partir de 30 €", tone: "mint" },
+  { label: "Recogida en Jerez", price: "0 € + Café ☕", tone: "butter" },
 ];
 
 export function OffersBanner() {
   return (
     <section className="offers-section">
       <div className="mx-auto max-w-7xl px-5 py-14 text-center lg:px-8">
-        <p className="eyebrow">LECTURAS PARA TODOS LOS BOLSILLOS</p>
+        <p className="eyebrow">PÁGINAS Y CAFÉ · LECTURAS PARA TODOS</p>
         <h2>
-          Lee más, gasta menos,
+          Lee más, ahorra con mimo,
           <br />
           <em style={{ fontStyle: "normal", color: "var(--rose-deep)" }}>
-            sé feliz.
+            disfruta cada página.
           </em>
         </h2>
         <div className="offer-card">
-          <h3>Libros de lance a precios honestos</h3>
+          <h3>Un rincón acogedor para amantes de la buena lectura</h3>
           <div className="offer-list">
             {offers.map((offer) => (
               <div
@@ -32,7 +32,7 @@ export function OffersBanner() {
             ))}
           </div>
           <Link href="#catalogo" className="offer-button">
-            VER LIBROS DISPONIBLES
+            EXPLORAR LOS 130 LIBROS
           </Link>
         </div>
       </div>

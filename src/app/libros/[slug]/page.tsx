@@ -3,6 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { demoBooks } from "@/lib/demo-data";
+import { BookDetailActions } from "@/components/BookDetailActions";
 
 const conditionLabels: Record<string, string> = {
   LIKE_NEW: "Como nuevo",
@@ -38,39 +39,46 @@ export default async function BookDetail({
 
   return (
     <main
-      className="min-h-screen bg-[var(--ivory)] text-[var(--text)]"
+      className="min-h-screen bg-[var(--paper)] text-[var(--text)]"
       style={{ fontFamily: "var(--font-body)" }}
     >
-      {/* Header */}
+      {/* Header bar */}
       <header
-        className="mx-auto flex max-w-7xl items-center justify-between border-b px-5 py-5 lg:px-8"
+        className="mx-auto flex max-w-7xl items-center justify-between border-b px-5 py-4 lg:px-8"
         style={{ borderColor: "var(--line)", background: "var(--paper)" }}
       >
         <Link
           href="/"
-          style={{
-            fontFamily: "var(--font-display)",
-            fontSize: "1.1rem",
-          }}
+          className="flex items-center gap-3 group"
+          aria-label="Más que libros, volver al inicio"
         >
-          Segunda Vuelta{" "}
-          <span style={{ color: "var(--rose-deep)" }}>Libros</span>
+          <Image
+            src="/logo.jpg"
+            alt="Más que libros"
+            width={42}
+            height={42}
+            className="brand-logo-img"
+          />
+          <span className="brand-text">
+            <span className="brand-title" style={{ fontSize: "1.08rem" }}>
+              Más que <span className="brand-title-accent">libros</span>
+            </span>
+            <span className="brand-tagline" style={{ fontSize: ".64rem" }}>
+              Páginas y café · Libros de ocasión
+            </span>
+          </span>
         </Link>
         <Link
           href="/#catalogo"
-          style={{
-            fontSize: ".8rem",
-            color: "var(--rose-deep)",
-            textDecoration: "underline",
-          }}
+          className="text-xs text-[var(--rose-deep)] hover:underline font-semibold flex items-center gap-1"
         >
-          Volver al catálogo
+          ← Volver al catálogo completo
         </Link>
       </header>
 
+      {/* Main book article */}
       <article
-        className="mx-auto grid max-w-6xl gap-12 px-5 py-16 lg:grid-cols-[.7fr_1.3fr] lg:py-24"
-        style={{ background: "var(--paper)" }}
+        className="mx-auto grid max-w-6xl gap-12 px-5 py-12 lg:grid-cols-[.75fr_1.25fr] lg:py-20"
       >
         <div>
           <div
@@ -81,6 +89,7 @@ export default async function BookDetail({
               overflow: "hidden",
               boxShadow: "var(--shadow-md)",
               backgroundColor: "var(--ivory)",
+              position: "relative",
             }}
           >
             <Image
@@ -95,50 +104,50 @@ export default async function BookDetail({
         </div>
 
         <div>
-          <p className="eyebrow">{category ? category.toUpperCase() : "LIBRO"}</p>
+          <p className="eyebrow">{category ? category.toUpperCase() : "LIBRO DE OCASIÓN"}</p>
           <h1
             style={{
               fontFamily: "var(--font-display)",
               fontWeight: 600,
-              fontSize: "clamp(2.2rem, 5vw, 3.4rem)",
-              lineHeight: 1.05,
+              fontSize: "clamp(2rem, 4.5vw, 3.2rem)",
+              lineHeight: 1.1,
               letterSpacing: "-.01em",
-              margin: "0 0 12px",
+              margin: "0 0 10px",
               color: "var(--charcoal-soft)",
             }}
           >
             {book.title}
           </h1>
-          <p style={{ color: "var(--muted)", fontSize: ".9rem" }}>
-            {book.author}
+          <p style={{ color: "var(--muted)", fontSize: ".95rem", margin: "0 0 14px" }}>
+            Autor: <strong className="text-[var(--charcoal-soft)]">{book.author}</strong>
           </p>
           <p
             style={{
-              marginTop: 10,
-              fontSize: ".72rem",
-              letterSpacing: ".1em",
+              fontSize: ".75rem",
+              letterSpacing: ".08em",
               textTransform: "uppercase",
-              color: "var(--mint-deep)",
+              color: "var(--sage-deep)",
+              fontWeight: 700,
             }}
           >
-            {conditionLabels[book.condition] ?? "Estado pendiente"}
+            Estado: {conditionLabels[book.condition] ?? "Como nuevo"}
           </p>
 
           <p
             style={{
               fontFamily: "var(--font-display)",
-              fontSize: "1.8rem",
-              fontWeight: 600,
-              margin: "24px 0 8px",
+              fontSize: "2rem",
+              fontWeight: 700,
+              margin: "20px 0 6px",
               color: "var(--rose-deep)",
             }}
           >
-            {price} EUR
+            {price} €
           </p>
 
           <div
-            className="border-y py-8"
-            style={{ borderColor: "var(--line)", marginTop: 20 }}
+            className="border-y py-6"
+            style={{ borderColor: "var(--line)", marginTop: 18 }}
           >
             <h2
               style={{
@@ -146,51 +155,38 @@ export default async function BookDetail({
                 fontWeight: 800,
                 textTransform: "uppercase",
                 letterSpacing: ".14em",
-                margin: "0 0 12px",
-                color: "var(--rose-deep)",
+                margin: "0 0 10px",
+                color: "var(--sage)",
               }}
             >
-              Descripción
+              Sinopsis &amp; Descripción
             </h2>
             <p
               style={{
-                fontSize: "1.02rem",
+                fontSize: ".96rem",
                 lineHeight: 1.7,
                 margin: 0,
                 color: "var(--charcoal-soft)",
               }}
             >
               {description ??
-                "Título de nuestro catálogo de ocasión, seleccionado y revisado con honestidad."}
+                "Título de nuestro catálogo de ocasión, revisado en mano y seleccionado con mimo desde Jerez de la Frontera."}
             </p>
           </div>
 
-          {/* Compra en Amazon */}
-          {book.amazonAffiliateUrl ? (
-            <a
-              className="used-book-button mt-8"
-              href={book.amazonAffiliateUrl}
-              target="_blank"
-              rel="noopener noreferrer nofollow"
-              style={{ marginTop: 28 }}
-            >
-              Comprar en Amazon ↗ · {price} EUR
-            </a>
-          ) : (
-            <span className="muted-button" style={{ marginTop: 28 }}>
-              Ejemplar disponible solo en tienda
-            </span>
-          )}
-          <p
-            style={{
-              fontSize: ".74rem",
-              color: "var(--muted)",
-              marginTop: 16,
+          {/* Acciones de compra: Añadir a cesta + Pedir por WhatsApp + Amazon fallback */}
+          <BookDetailActions
+            book={{
+              id: String(book.id),
+              slug: book.slug,
+              title: book.title,
+              author: book.author,
+              price: Number(book.price),
+              imageUrl: book.imageUrl,
+              condition: book.condition,
+              amazonAffiliateUrl: book.amazonAffiliateUrl,
             }}
-          >
-            Enlace de afiliado: la librería puede recibir una comisión sin coste
-            adicional para ti.
-          </p>
+          />
         </div>
       </article>
     </main>

@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { Header } from "@/components/Header";
+import { useCart } from "@/lib/cart-context";
 import { Footer } from "@/components/Footer";
 import { OffersBanner } from "@/components/OffersBanner";
 import { CategoryIconNav } from "@/components/CategoryIconNav";
@@ -69,9 +70,8 @@ export function Storefront({
   const [condition, setCondition] = useState("Todas");
   const [category, setCategory] = useState("Todos");
   const [price, setPrice] = useState("Cualquier precio");
-  const [cart, setCart] = useState<string[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
+  const { addItem, toggleCart } = useCart();
 
   const categories = [
     "Todos",
@@ -98,29 +98,32 @@ export function Storefront({
       }),
     [books, category, condition, price, query]
   );
-  const addToCart = (id: string) =>
-    setCart((c) => (c.includes(id) ? c : [...c, id]));
-  const removeFromCart = (id: string) =>
-    setCart((c) => c.filter((x) => x !== id));
+  const addToCart = (book: StoreBook) => {
+    addItem({
+      id: book.id,
+      slug: book.slug,
+      title: book.title,
+      author: book.author,
+      price: book.price,
+      imageUrl: book.imageUrl,
+      condition: book.condition,
+    });
+  };
   const scrollToCatalog = () =>
     document.getElementById("catalogo")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  const cartBooks = books.filter((b) => cart.includes(b.id));
   const featured = books[0];
 
   return (
     <main className="min-h-screen bg-[var(--paper)] text-[var(--text)]">
       {/* Demo ribbon */}
       <div className="demo-ribbon">
-        CATÁLOGO DE DEMOSTRACIÓN · DATOS FICTICIOS
+        ✨ ENVÍO GRATIS A PARTIR DE 30 € · RECOGIDA LOCAL EN JEREZ CON CAFÉ DE CORTESÍA ☕ · ATENCIÓN DIRECTA POR WHATSAPP ✨
       </div>
 
       {/* Header */}
       <Header
         query={query}
         onQueryChange={setQuery}
-        cartCount={cart.length}
-        cartOpen={cartOpen}
-        onCartToggle={() => setCartOpen(!cartOpen)}
         menuOpen={menuOpen}
         onMenuToggle={() => setMenuOpen(!menuOpen)}
       />
@@ -130,60 +133,7 @@ export function Storefront({
         <div className="nav-backdrop" onClick={() => setMenuOpen(false)} />
       )}
 
-      {/* Cart drawer */}
-      {cartOpen && (
-        <>
-          <div className="cart-backdrop" onClick={() => setCartOpen(false)} />
-          <aside className="cart-drawer" aria-label="Cesta">
-            <div className="flex items-center justify-between mb-5">
-              <h2>Tu cesta</h2>
-              <button
-                aria-label="Cerrar carrito"
-                onClick={() => setCartOpen(false)}
-                style={{
-                  background: "none",
-                  border: 0,
-                  cursor: "pointer",
-                  color: "var(--muted)",
-                }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-            {cartBooks.length ? (
-              <>
-                {cartBooks.map((book) => (
-                  <div className="cart-line" key={book.id}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{book.title}</span>
-                      <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>
-                        {book.price.toFixed(2).replace(".", ",")} EUR
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      aria-label={`Eliminar ${book.title} de la cesta`}
-                      onClick={() => removeFromCart(book.id)}
-                      className="cart-remove"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                ))}
-                <div className="cart-total">
-                  <span>Total</span>
-                  <strong>
-                    {cartBooks.reduce((s, b) => s + b.price, 0).toFixed(2).replace(".", ",")} EUR
-                  </strong>
-                </div>
-              </>
-            ) : (
-              <p>Tu cesta está vacía.</p>
-            )}
-            <small>El checkout estará disponible en una fase posterior.</small>
-          </aside>
-        </>
-      )}
+      {/* Cart drawer handled globally by CartDrawer component */}
 
       {/* ═══════════════════════════════════════════════════════════
           HERO SECTION
@@ -576,7 +526,7 @@ function BookGrid({
   onAdd,
 }: {
   books: StoreBook[];
-  onAdd: (id: string) => void;
+  onAdd: (book: StoreBook) => void;
 }) {
   if (!books.length) {
     return (
@@ -605,7 +555,7 @@ function BookGrid({
             <button
               className="quick-add"
               aria-label={`Añadir ${book.title} al carrito`}
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(book.id); }}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(book); }}
             >
               <ShoppingBag size={16} />
             </button>
@@ -617,7 +567,7 @@ function BookGrid({
             </h3>
             <div className="flex items-center justify-between">
               <strong>{book.price.toFixed(2).replace(".", ",")} EUR</strong>
-              <button className="add-link" onClick={() => onAdd(book.id)}>
+              <button className="add-link" onClick={() => onAdd(book)}>
                 Añadir <ChevronDown size={13} />
               </button>
             </div>
@@ -643,7 +593,7 @@ function HeroFeature({
   onAdd,
 }: {
   book?: StoreBook;
-  onAdd: (id: string) => void;
+  onAdd: (book: StoreBook) => void;
 }) {
   return (
     <div className="hero-feature soft-dots">
@@ -662,7 +612,7 @@ function HeroFeature({
             <p className="eyebrow">LIBRO RECOMENDADO</p>
             <h2>{book.title}</h2>
             <p>{book.author}</p>
-            <button onClick={() => onAdd(book.id)}>
+            <button onClick={() => onAdd(book)}>
               Ver ejemplar · {book.price.toFixed(2).replace(".", ",")} EUR{" "}
               <ShoppingBag size={14} />
             </button>
