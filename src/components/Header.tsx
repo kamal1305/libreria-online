@@ -37,6 +37,33 @@ export function Header({
 
   return (
     <header className="site-header">
+      {/* 1. BANNER SUPERIOR DE AVISOS */}
+      <div className="top-banner" role="region" aria-label="Avisos destacados">
+        <div className="top-banner-inner">
+          <span className="inline-flex items-center gap-1.5">
+            ✨ <strong className="font-bold">ENVÍO GRATIS</strong> A PARTIR DE 30 €
+          </span>
+          <span className="banner-dot hidden sm:inline">·</span>
+          <span className="inline-flex items-center gap-1.5">
+            PUNTO DE RECOGIDA EN JEREZ:{" "}
+            <span className="banner-pill-free">GRATIS</span>
+          </span>
+          <span className="banner-dot hidden md:inline">·</span>
+          <span className="hidden md:inline-flex items-center gap-1.5">
+            ATENCIÓN DIRECTA POR WHATSAPP:{" "}
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline font-bold hover:text-white"
+            >
+              657 05 32 33
+            </a>{" "}
+            ✨
+          </span>
+        </div>
+      </div>
+
       {/* Main row */}
       <div className="header-inner">
         <button
@@ -52,19 +79,21 @@ export function Header({
             padding: "4px",
           }}
         >
-          {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          {menuOpen ? <X size={26} /> : <Menu size={26} />}
         </button>
 
-        {/* Official circular logo & brand */}
+        {/* 2. LOGOTIPO Y MARCA AMPLIADOS */}
         <Link href="/" className="brand-lockup" aria-label="Más que libros, inicio">
-          <Image
-            src="/logo.jpg"
-            alt="Logo Más que libros"
-            width={48}
-            height={48}
-            className="brand-logo-img"
-            priority
-          />
+          <div className="brand-logo-container">
+            <Image
+              src="/logo.jpg"
+              alt="Logo Más que libros"
+              width={64}
+              height={64}
+              className="brand-logo-img"
+              priority
+            />
+          </div>
           <span className="brand-text">
             <span className="brand-title">
               Más que <span className="brand-title-accent">libros</span>
@@ -85,7 +114,7 @@ export function Header({
               ?.scrollIntoView({ behavior: "smooth", block: "start" });
           }}
         >
-          <Search size={17} color="var(--muted)" />
+          <Search size={19} color="var(--muted)" />
           <input
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
@@ -93,43 +122,43 @@ export function Header({
             aria-label="Buscar por título, autor o ISBN"
           />
           <button type="submit" aria-label="Buscar">
-            <Search size={15} />
+            <Search size={16} />
           </button>
         </form>
 
-        {/* Acciones */}
+        {/* 3. CESTA, WHATSAPP E INSTAGRAM */}
         <div className="header-actions">
           <a
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="header-action hidden md:flex"
-            title="Atención por WhatsApp"
+            className="header-action header-action-wa hidden md:inline-flex"
+            title="Atención directa por WhatsApp"
           >
-            <MessageCircle size={18} color="#25D366" />
-            <span>WhatsApp</span>
+            <MessageCircle className="w-6 h-6 text-[#25D366]" strokeWidth={2.2} />
+            <span className="font-semibold text-slate-800">WhatsApp</span>
           </a>
 
-          <Link href="/admin/login" className="header-action">
-            <UserRound size={18} />
-            <span className="hidden sm:inline">Mi cuenta</span>
+          <Link href="/admin/login" className="header-action" title="Mi cuenta">
+            <UserRound className="w-6 h-6 text-slate-700" strokeWidth={1.9} />
+            <span className="hidden sm:inline font-semibold text-slate-800">Mi cuenta</span>
           </Link>
 
           <button
             type="button"
-            className="header-action relative"
+            className="header-action header-action-cart relative"
             onClick={toggleCart}
             aria-expanded={cartOpen}
             aria-label="Ver cesta de libros"
           >
-            <ShoppingBag size={18} />
-            <span className="hidden sm:inline">Cesta</span>
-            {cartCount > 0 && <b className="cart-count">{cartCount}</b>}
+            <ShoppingBag className="w-6 h-6 text-slate-800" strokeWidth={2.2} />
+            <span className="hidden sm:inline font-bold text-slate-800">Cesta</span>
+            {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
           </button>
         </div>
       </div>
 
-      {/* Navigation row */}
+      {/* 4. BARRA DE APARTADOS (NAVBAR INFERIOR VERDE AGUA / MENTA PASTEL) */}
       <nav className={`nav-bar ${menuOpen ? "nav-open" : ""}`}>
         <div className={`nav-inner ${menuOpen ? "flex" : "hidden lg:flex"}`}>
           {navItems.map((item) =>
@@ -150,6 +179,7 @@ export function Header({
               rel="noopener noreferrer"
               aria-label="Instagram @escondida_en_un_libro_"
               title="Instagram @escondida_en_un_libro_"
+              className="social-btn instagram-btn"
             >
               <InstagramIcon />
             </a>
@@ -159,9 +189,9 @@ export function Header({
               rel="noopener noreferrer"
               aria-label="WhatsApp"
               title="WhatsApp Business"
-              style={{ color: "#25D366" }}
+              className="social-btn whatsapp-btn"
             >
-              <MessageCircle size={18} />
+              <MessageCircle className="w-6 h-6 text-[#25D366]" strokeWidth={2.2} />
             </a>
           </div>
         </div>
@@ -174,15 +204,15 @@ function InstagramIcon() {
   return (
     <svg
       aria-hidden="true"
-      className="social-icon"
+      className="w-6 h-6 text-[#E1306C]"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth="2"
     >
-      <rect x="3" y="3" width="18" height="18" rx="5" />
-      <circle cx="12" cy="12" r="4" />
-      <circle cx="17.5" cy="6.5" r=".8" fill="currentColor" stroke="none" />
+      <rect x="2" y="2" width="20" height="20" rx="5" />
+      <circle cx="12" cy="12" r="4.5" />
+      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
     </svg>
   );
 }

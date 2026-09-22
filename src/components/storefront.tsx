@@ -130,8 +130,7 @@ export function Storefront({
 
   return (
     <main className="min-h-screen bg-[var(--paper)] text-[var(--text)]">
-      {/* Demo ribbon */}
-      <div className="demo-ribbon">✨ ENVÍO GRATIS A PARTIR DE 30 € · PUNTO DE RECOGIDA EN JEREZ · ATENCIÓN DIRECTA POR WHATSAPP: 657 05 32 33 ✨</div>
+
 
       {/* Header */}
       <Header
