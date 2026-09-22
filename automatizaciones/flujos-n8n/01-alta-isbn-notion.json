@@ -129,11 +129,11 @@
           "parameters": [
             {
               "name": "q",
-              "value": "='isbn:' + $('ISBN Input1').first().json.isbn"
+              "value": "=isbn:{{ $('ISBN Input1').first().json.isbn }}"
             },
             {
               "name": "key",
-              "value": "PEGA_AQUI_TU_CLAVE_GOOGLE"
+              "value": "AIzaSyBTiBagkXEh_NQRobFqO_obNEuBcByeXIY"
             }
           ]
         },
