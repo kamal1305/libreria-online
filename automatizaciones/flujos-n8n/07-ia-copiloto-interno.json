@@ -1,0 +1,103 @@
+{
+  "name": "Segunda Vuelta Libros - Copiloto Interno",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "copiloto-interno",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Copiloto",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "copiloto-interno"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\nconst consulta = (body.consulta || '').toLowerCase().trim();\n\nconst comandos = ['libros_para_rebajar','libros_sin_marketing','generos_mas_rentables','libros_parados_90','resumen_inventario','stock_por_genero','ventas_por_plataforma','tickets_abiertos','margen_bajo','ayuda'];\n\nlet comando = null;\nfor (const c of comandos) {\n  if (consulta.includes(c) || consulta === c) { comando = c; break; }\n}\n\nif (!comando) {\n  if (consulta.includes('rebaj') || consulta.includes('descont')) comando = 'libros_para_rebajar';\n  else if (consulta.includes('marketing') || consulta.includes('promocion')) comando = 'libros_sin_marketing';\n  else if (consulta.includes('rentab') || consulta.includes('margen')) comando = 'generos_mas_rentables';\n  else if (consulta.includes('parado') || consulta.includes('90')) comando = 'libros_parados_90';\n  else if (consulta.includes('inventario') || consulta.includes('stock')) comando = 'resumen_inventario';\n  else if (consulta.includes('genero')) comando = 'stock_por_genero';\n  else if (consulta.includes('plataforma')) comando = 'ventas_por_plataforma';\n  else if (consulta.includes('ticket') || consulta.includes('soporte')) comando = 'tickets_abiertos';\n  else if (consulta.includes('margen bajo')) comando = 'margen_bajo';\n  else comando = 'ayuda';\n}\n\nreturn [{ json: { comando: comando, consultaOriginal: consulta } }];"
+      },
+      "id": "parse-command",
+      "name": "Interpretar Consulta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": "382e26a3-8bcc-4c1c-9bb5-65b020ebbe27",
+        "options": {}
+      },
+      "id": "query-inventory",
+      "name": "Consultar Inventario",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": "eaefb7ca-2354-4f64-8bb0-189349d59130",
+        "options": {}
+      },
+      "id": "query-sales",
+      "name": "Consultar Ventas",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [440, 200]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": "81f36a12-0882-4404-8a57-568b8be42b24",
+        "options": {}
+      },
+      "id": "query-support",
+      "name": "Consultar Soporte",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [440, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const comando = $('Interpretar Consulta').first().json.comando;\nconst inventory = $('Consultar Inventario').first().json.results || $('Consultar Inventario').first().json.data || [];\nconst sales = $('Consultar Ventas').first().json.results || $('Consultar Ventas').first().json.data || [];\nconst support = $('Consultar Soporte').first().json.results || $('Consultar Soporte').first().json.data || [];\n\nconst now = new Date();\nconst dayMs = 86400000;\n\nconst books = inventory.map(b => {\n  const p = b.properties || {};\n  return {\n    title: p.Nombre?.title?.[0]?.plain_text || '',\n    author: p.Autor?.rich_text?.[0]?.plain_text || '',\n    genre: p.Genero?.select?.name || 'Otros',\n    estadoPublicacion: p['Estado publicacion']?.select?.name || '',\n    coste: p.Coste?.number || 0,\n    precioVenta: p['Precio venta']?.number || 0,\n    fechaEntrada: p['date:Fecha entrada:start'] || '',\n    marketingGenerado: p['Marketing generado'] === '__YES__',\n    sku: p.SKU?.number || p.SKU?.formula_string || ''\n  };\n});\n\nlet respuesta = '';\n\nswitch (comando) {\n  case 'libros_para_rebajar': {\n    const rebajar = books.filter(b => {\n      if (b.estadoPublicacion !== 'Publicado' || !b.fechaEntrada) return false;\n      const dias = Math.floor((now - new Date(b.fechaEntrada)) / dayMs);\n      return dias > 30;\n    }).map(b => {\n      const dias = Math.floor((now - new Date(b.fechaEntrada)) / dayMs);\n      return `- ${b.title} (${b.author}) - ${dias} dias - ${b.precioVenta} eur`;\n    });\n    respuesta = rebajar.length > 0 ? `Libros candidatos a rebaja (${rebajar.length}):\\n\\n${rebajar.join('\\n')}` : 'No hay libros que necesiten rebaja.';\n    break;\n  }\n  case 'libros_sin_marketing': {\n    const sin = books.filter(b => b.estadoPublicacion === 'Publicado' && !b.marketingGenerado);\n    respuesta = sin.length > 0 ? `Libros sin marketing (${sin.length}):\\n\\n${sin.map(b => `- ${b.title} (${b.author}) - ${b.precioVenta} eur`).join('\\n')}` : 'Todos los libros tienen marketing generado.';\n    break;\n  }\n  case 'generos_mas_rentables': {\n    const gm = {};\n    sales.forEach(s => {\n      const p = s.properties || {};\n      const g = p.Genero?.select?.name || 'Otros';\n      const margen = (p['Precio venta']?.number || 0) - (p.Coste?.number || 0);\n      if (!gm[g]) gm[g] = { margen: 0, count: 0 };\n      gm[g].margen += margen;\n      gm[g].count++;\n    });\n    const sorted = Object.entries(gm).sort((a, b) => b[1].margen - a[1].margen);\n    respuesta = `Generos mas rentables:\\n\\n${sorted.map(([g, d]) => `- ${g}: ${d.margen.toFixed(2)} eur (${d.count} ventas)`).join('\\n')}`;\n    break;\n  }\n  case 'libros_parados_90': {\n    const parados = books.filter(b => {\n      if (b.estadoPublicacion !== 'Publicado' || !b.fechaEntrada) return false;\n      return Math.floor((now - new Date(b.fechaEntrada)) / dayMs) > 90;\n    });\n    respuesta = parados.length > 0 ? `Libros +90 dias (${parados.length}):\\n\\n${parados.map(b => `- ${b.title} (${b.author}) - ${b.precioVenta} eur`).join('\\n')}\\n\\nSugerencia: rebajar 20% o retirar.` : 'No hay libros parados mas de 90 dias.';\n    break;\n  }\n  case 'resumen_inventario': {\n    const disp = books.filter(b => b.estadoPublicacion === 'Publicado');\n    const res = books.filter(b => b.estadoPublicacion === 'Reservado');\n    const vend = books.filter(b => b.estadoPublicacion === 'Vendido');\n    const valor = disp.reduce((s, b) => s + b.precioVenta, 0);\n    const coste = disp.reduce((s, b) => s + b.coste, 0);\n    respuesta = `Resumen de inventario:\\n\\n- Disponibles: ${disp.length} (valor: ${valor.toFixed(2)} eur)\\n- Reservados: ${res.length}\\n- Vendidos: ${vend.length}\\n- Coste stock: ${coste.toFixed(2)} eur\\n- Margen potencial: ${(valor - coste).toFixed(2)} eur`;\n    break;\n  }\n  case 'stock_por_genero': {\n    const gc = {};\n    books.filter(b => b.estadoPublicacion === 'Publicado').forEach(b => { gc[b.genre] = (gc[b.genre] || 0) + 1; });\n    const sorted = Object.entries(gc).sort((a, b) => b[1] - a[1]);\n    respuesta = `Stock por genero:\\n\\n${sorted.map(([g, n]) => `- ${g}: ${n} libros`).join('\\n')}`;\n    break;\n  }\n  case 'ventas_por_plataforma': {\n    const pc = {};\n    sales.forEach(s => {\n      const p = s.properties || {};\n      const plat = p.Plataforma?.select?.name || 'Otros';\n      const precio = p['Precio venta']?.number || 0;\n      if (!pc[plat]) pc[plat] = { count: 0, total: 0 };\n      pc[plat].count++;\n      pc[plat].total += precio;\n    });\n    respuesta = `Ventas por plataforma:\\n\\n${Object.entries(pc).map(([p, d]) => `- ${p}: ${d.count} ventas, ${d.total.toFixed(2)} eur`).join('\\n')}`;\n    break;\n  }\n  case 'tickets_abiertos': {\n    const abiertos = support.filter(t => {\n      const p = t.properties || {};\n      const estado = p['Estado ticket']?.select?.name || '';\n      return estado === 'Nuevo' || estado === 'En revision';\n    });\n    respuesta = abiertos.length > 0 ? `Tickets abiertos (${abiertos.length}):\\n\\n${abiertos.map(t => { const p = t.properties || {}; return `- ${p.Asunto?.title?.[0]?.plain_text || 'Sin asunto'} (${p.Prioridad?.select?.name || 'Media'})`; }).join('\\n')}` : 'No hay tickets abiertos.';\n    break;\n  }\n  case 'margen_bajo': {\n    const bajo = books.filter(b => {\n      if (b.estadoPublicacion !== 'Publicado' || b.precioVenta === 0) return false;\n      return (((b.precioVenta - b.coste) / b.precioVenta) * 100) < 40;\n    });\n    respuesta = bajo.length > 0 ? `Libros con margen bajo <40% (${bajo.length}):\\n\\n${bajo.map(b => `- ${b.title} - Coste: ${b.coste} eur, Precio: ${b.precioVenta} eur`).join('\\n')}` : 'Todos los libros tienen margen >= 40%.';\n    break;\n  }\n  default: {\n    respuesta = `Copiloto de Segunda Vuelta Libros\\n\\nComandos disponibles:\\n- libros_para_rebajar\\n- libros_sin_marketing\\n- generos_mas_rentables\\n- libros_parados_90\\n- resumen_inventario\\n- stock_por_genero\\n- ventas_por_plataforma\\n- tickets_abiertos\\n- margen_bajo\\n\\nEscribe el comando o una pregunta natural (ej: 'que libros rebajar?').`;\n  }\n}\n\nreturn [{ json: { respuesta: respuesta, comando: comando } }];"
+      },
+      "id": "process-query",
+      "name": "Procesar Consulta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ respuesta: $json.respuesta, comando: $json.comando }) }}",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [880, 0]
+    }
+  ],
+  "connections": {
+    "Webhook Copiloto": { "main": [[{"node": "Interpretar Consulta", "type": "main", "index": 0}]] },
+    "Interpretar Consulta": { "main": [[{"node": "Consultar Inventario", "type": "main", "index": 0}]] },
+    "Consultar Inventario": { "main": [[{"node": "Consultar Ventas", "type": "main", "index": 0}]] },
+    "Consultar Ventas": { "main": [[{"node": "Consultar Soporte", "type": "main", "index": 0}]] },
+    "Consultar Soporte": { "main": [[{"node": "Procesar Consulta", "type": "main", "index": 0}]] },
+    "Procesar Consulta": { "main": [[{"node": "Responder", "type": "main", "index": 0}]] }
+  },
+  "metadata": {
+    "templateId": "segunda-vuelta-libros-copiloto",
+    "name": "Segunda Vuelta Libros - Copiloto Interno",
+    "description": "Webhook que responde consultas operativas sobre inventario, ventas y soporte"
+  }
+}

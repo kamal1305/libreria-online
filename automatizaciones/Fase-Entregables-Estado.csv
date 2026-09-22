@@ -1,0 +1,7 @@
+"Fase","Entregables","Estado"
+"1. Inventario","ISBN → Notion","Listo"
+"2. Pedidos","Webhook → stock → registro","Listo"
+"3. Marketing","Cron → borradores de copy","Listo"
+"4. Atención al cliente","Chatbot + FAQ + tickets","Listo"
+"5. Analítica","Métricas + dashboard","Listo"
+"6. IA avanzada","Precios, copiloto, recomendador","Listo"

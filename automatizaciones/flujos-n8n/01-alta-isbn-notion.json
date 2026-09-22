@@ -1,0 +1,191 @@
+{
+  "name": "Segunda Vuelta Libros - Alta por ISBN",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.ISBN || '9788420683146' }}",
+        "value2": ""
+      },
+      "id": "isbn-input",
+      "name": "ISBN Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [220, 0],
+      "notes": "Introduce el ISBN del libro. Por defecto usa uno de prueba."
+    },
+    {
+      "parameters": {
+        "url": "https://openlibrary.org/search.json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "isbn",
+              "value": "={{ $json.value1 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "openlibrary-search",
+      "name": "Open Library Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 0],
+      "notes": "Busca el libro por ISBN en Open Library"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.numFound }}",
+              "rightValue": 0,
+              "type": "org.n8n.n8n.checks.not.type.number.greater"
+            }
+          ],
+          "filterRenames": []
+        },
+        "options": {}
+      },
+      "id": "check-found",
+      "name": "Libro encontrado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://openlibrary.org' + $json.docs[0].key + '.json' }}",
+        "options": {}
+      },
+      "id": "openlibrary-works",
+      "name": "Open Library Works",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, -100],
+      "notes": "Obtiene detalles del libro (descripcion, sujetos)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const searchDoc = $('Open Library Search').first().json.docs[0];\nconst workData = $json;\nconst isbn = $('ISBN Input').first().json.value1;\n\nconst coverId = searchDoc.cover_i;\nconst coverUrl = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-M.jpg` : `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`;\n\nlet description = 'Sin descripcion disponible.';\nif (workData.description) {\n  if (typeof workData.description === 'object') {\n    description = workData.description.value || description;\n  } else {\n    description = workData.description;\n  }\n}\n\nconst author = searchDoc.author_name ? searchDoc.author_name[0] : 'Autor desconocido';\nconst year = searchDoc.first_publish_year || null;\nconst subjects = (workData.subjects || []).slice(0, 5).map(s => s.name || s);\n\nfunction mapGenre(subjects) {\n  const genreMap = {\n    'fiction': 'Novela',\n    'history': 'Historia',\n    'poetry': 'Poesia',\n    'drama': 'Teatro',\n    'biography': 'Biografia',\n    'fantasy': 'Fantasia',\n    'horror': 'Terror',\n    'mystery': 'Thriller',\n    'science': 'Ensayo',\n    'children': 'Infantil'\n  };\n  for (const subject of subjects) {\n    const lower = subject.toLowerCase();\n    for (const [key, value] of Object.entries(genreMap)) {\n      if (lower.includes(key)) return value;\n    }\n  }\n  return 'Otros';\n}\n\nconst genre = mapGenre(subjects);\n\nreturn {\n  isbn: isbn,\n  title: searchDoc.title || 'Titulo desconocido',\n  author: author,\n  year: year,\n  genre: genre,\n  coverUrl: coverUrl,\n  description: description,\n  subjects: subjects.join(', '),\n  fechaEntrada: new Date().toISOString().split('T')[0]\n};"
+      },
+      "id": "normalize-data",
+      "name": "Normalizar Datos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, -100]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "create",
+        "databaseId": "382e26a3-8bcc-4c1c-9bb5-65b020ebbe27",
+        "properties": {
+          "Nombre": {
+            "title": "={{ $json.title }}"
+          },
+          "ISBN": {
+            "rich_text": [{"text": {"content": "={{ $json.isbn }}"}}]
+          },
+          "Autor": {
+            "rich_text": [{"text": {"content": "={{ $json.author }}"}}]
+          },
+          "Año": {
+            "number": "={{ $json.year }}"
+          },
+          "Género": {
+            "select": "={{ $json.genre }}"
+          },
+          "Estado físico": {
+            "select": "Bueno"
+          },
+          "Estado publicación": {
+            "select": "Pendiente"
+          },
+          "Portada": {
+            "url": "={{ $json.coverUrl }}"
+          },
+          "Sinopsis": {
+            "rich_text": [{"text": {"content": "={{ $json.description.substring(0, 2000) }}"}}]
+          },
+          "Fecha entrada": {
+            "date": {"start": "={{ $json.fechaEntrada }}"}
+          }
+        }
+      },
+      "id": "notion-create",
+      "name": "Crear en Notion",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [1320, -100],
+      "notes": "Crea la ficha del libro en la base de datos de Notion. Configura tus credenciales de Notion en n8n."
+    },
+    {
+      "parameters": {
+        "jsCode": "const notionPage = $json;\nreturn {\n  success: true,\n  message: `Libro creado: ${$('Normalizar Datos').first().json.title}`,\n  isbn: $('Normalizar Datos').first().json.isbn,\n  author: $('Normalizar Datos').first().json.author,\n  notionUrl: notionPage.url || 'URL no disponible',\n  genre: $('Normalizar Datos').first().json.genre,\n  coverUrl: $('Normalizar Datos').first().json.coverUrl\n};"
+      },
+      "id": "success-response",
+      "name": "Respuesta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1540, -100]
+    },
+    {
+      "parameters": {
+        "jsCode": "const isbn = $('ISBN Input').first().json.value1;\nreturn {\n  success: false,\n  message: `No se encontro el libro con ISBN: ${isbn} en Open Library`,\n  isbn: isbn,\n  suggestion: 'Prueba con Google Books API o introduce los datos manualmente'\n};"
+      },
+      "id": "not-found-response",
+      "name": "No Encontrado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 100]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{"node": "ISBN Input", "type": "main", "index": 0}]]
+    },
+    "ISBN Input": {
+      "main": [[{"node": "Open Library Search", "type": "main", "index": 0}]]
+    },
+    "Open Library Search": {
+      "main": [[{"node": "Libro encontrado?", "type": "main", "index": 0}]]
+    },
+    "Libro encontrado?": {
+      "main": [
+        [{"node": "Open Library Works", "type": "main", "index": 0}],
+        [{"node": "No Encontrado", "type": "main", "index": 0}]
+      ]
+    },
+    "Open Library Works": {
+      "main": [[{"node": "Normalizar Datos", "type": "main", "index": 0}]]
+    },
+    "Normalizar Datos": {
+      "main": [[{"node": "Crear en Notion", "type": "main", "index": 0}]]
+    },
+    "Crear en Notion": {
+      "main": [[{"node": "Respuesta", "type": "main", "index": 0}]]
+    }
+  },
+  "metadata": {
+    "templateId": "segunda-vuelta-libros-isbn-flow",
+    "name": "Segunda Vuelta Libros - Alta por ISBN",
+    "description": "Flujo automatico: introduce un ISBN y se crea la ficha del libro en Notion con metadatos de Open Library"
+  }
+}

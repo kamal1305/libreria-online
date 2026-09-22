@@ -1,0 +1,202 @@
+{
+  "name": "Segunda Vuelta Libros - Marketing Automatico",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Cron Diario 9AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0],
+      "notes": "Ejecuta el flujo todos los dias a las 9:00. Puedes cambiar la frecuencia."
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": "382e26a3-8bcc-4c1c-9bb5-65b020ebbe27",
+        "filter": {
+          "filterType": "and",
+          "filters": [
+            {
+              "key": "Estado publicación",
+              "type": "select",
+              "condition": "equals",
+              "value": "Publicado"
+            },
+            {
+              "key": "Marketing generado",
+              "type": "checkbox",
+              "condition": "notEqual",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "query-published-books",
+      "name": "Buscar Libros Publicados",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [220, 0],
+      "notes": "Busca libros publicados sin marketing generado aun"
+    },
+    {
+      "parameters": {
+        "jsCode": "const books = $json.results || $json.data || [];\n\nif (books.length === 0) {\n  return [{ json: { noBooks: true, message: 'No hay libros nuevos para marketing' } }];\n}\n\n// Procesar cada libro y generar copy para 3 canales\nconst marketingItems = [];\n\nfor (const book of books) {\n  const props = book.properties || {};\n  const title = props.Nombre?.title?.[0]?.plain_text || 'Sin titulo';\n  const author = props.Autor?.rich_text?.[0]?.plain_text || 'Autor desconocido';\n  const isbn = props.ISBN?.rich_text?.[0]?.plain_text || '';\n  const sku = props.SKU?.number || props.SKU?.formula_string || '';\n  const genre = props.Genero?.select?.name || 'Otros';\n  const year = props.Año?.number || '';\n  const price = props['Precio venta']?.number || 0;\n  const coverUrl = props.Portada?.url || '';\n  const webUrl = props['Enlace web']?.url || '';\n  const synopsis = props.Sinopsis?.rich_text?.[0]?.plain_text || '';\n  const condition = props['Estado fisico']?.select?.name || '';\n  const pageId = book.id;\n\n  // Hashtags por genero\n  const genreHashtags = {\n    'Novela': '#novela #literatura #lectura',\n    'Novela historica': '#novelahistorica #historia #literatura',\n    'Ciencia ficcion': '#cienciaficcion #scifi #literatura',\n    'Fantasia': '#fantasia #libros #lectura',\n    'Terror': '#terror #libros #misterio',\n    'Thriller': '#thriller #misterio #suspense',\n    'Ensayo': '#ensayo #no ficcion #cultura',\n    'Poesia': '#poesia #literatura #versos',\n    'Teatro': '#teatro #literatura #drama',\n    'Infantil': '#infantil #libros #ninos',\n    'Biografia': '#biografia #no ficcion #historia',\n    'Historia': '#historia #no ficcion #cultura',\n    'Otros': '#libros #lectura #segundamano'\n  };\n\n  const hashtags = genreHashtags[genre] || genreHashtags['Otros'];\n  const extraTags = '#segundavuelta #librossegundamano #jerez #libreria';\n  const allHashtags = hashtags + ' ' + extraTags;\n\n  // Fecha sugerida (manana + offset por canal)\n  const tomorrow = new Date();\n  tomorrow.setDate(tomorrow.getDate() + 1);\n  const formatDate = (d) => d.toISOString().split('T')[0];\n\n  // --- COPY INSTAGRAM ---\n  const igShort = `Nuevo en Segunda Vuelta: \"${title}\" de ${author}`;\n  const igLong = `Nuevo libro en la libreria.\n\n\"${title}\" de ${author}` + (year ? ` (${year})` : '') + `\n\n${genre ? 'Genero: ' + genre + '\\n' : ''}${condition ? 'Estado: ' + condition + '\\n' : ''}Precio: ${price} eur\n\n` + (synopsis ? synopsis.substring(0, 150) + '...' : 'Una gran lectura te espera.') + `\n\nDisponible en nuestra tienda online.\n\n${allHashtags}`;\n\n  marketingItems.push({\n    bookTitle: title,\n    bookAuthor: author,\n    isbn: isbn,\n    sku: String(sku),\n    genre: genre,\n    price: price,\n    coverUrl: coverUrl,\n    webUrl: webUrl,\n    pageId: pageId,\n    channel: 'Instagram',\n    estado: 'Borrador',\n    fechaSugerida: formatDate(tomorrow),\n    copyCorto: igShort,\n    copyLargo: igLong,\n    hashtags: allHashtags\n  });\n\n  // --- COPY FACEBOOK ---\n  const fbShort = `Acaba de llegar: \"${title}\" de ${author}`;\n  const fbLong = `Tengo una novedad en Segunda Vuelta Libros.\n\n\"${title}\" de ${author}` + (year ? ` (${year})` : '') + `\n\n` + (genre ? 'Genero: ' + genre + '\\n' : '') + (condition ? 'Estado: ' + condition + '\\n' : '') + `Precio: ${price} eur\n\n` + (synopsis ? synopsis.substring(0, 200) + '...' : 'Una lectura que no te puedes perder.') + `\n\nSi te interesa, escribeme o pasate por la tienda online. ¡No tardes, que es unico ejemplar!\n\n${hashtags} ${extraTags}`;\n\n  marketingItems.push({\n    bookTitle: title,\n    bookAuthor: author,\n    isbn: isbn,\n    sku: String(sku),\n    genre: genre,\n    price: price,\n    coverUrl: coverUrl,\n    webUrl: webUrl,\n    pageId: pageId,\n    channel: 'Facebook',\n    estado: 'Borrador',\n    fechaSugerida: formatDate(new Date(tomorrow.getTime() + 86400000)),\n    copyCorto: fbShort,\n    copyLargo: fbLong,\n    hashtags: allHashtags\n  });\n\n  // --- COPY NEWSLETTER ---\n  const nlShort = `Novedad: ${title} - ${author}`;\n  const nlLong = `Hola,\n\nEsta semana te traemos una novedad especial:\n\n\"${title}\" de ${author}` + (year ? ` (${year})` : '') + `\n\n` + (genre ? 'Genero: ' + genre + '\\n' : '') + (condition ? 'Estado: ' + condition + '\\n' : '') + `Precio: ${price} eur\n\n` + (synopsis ? synopsis.substring(0, 300) + '...' : 'Una lectura que te enganchara.') + `\n\nDisponible en nuestra tienda: ${webUrl || 'consultanos'}\n\nUn saludo,\nSegunda Vuelta Libros`;\n\n  marketingItems.push({\n    bookTitle: title,\n    bookAuthor: author,\n    isbn: isbn,\n    sku: String(sku),\n    genre: genre,\n    price: price,\n    coverUrl: coverUrl,\n    webUrl: webUrl,\n    pageId: pageId,\n    channel: 'Newsletter',\n    estado: 'Borrador',\n    fechaSugerida: formatDate(new Date(tomorrow.getTime() + 172800000)),\n    copyCorto: nlShort,\n    copyLargo: nlLong,\n    hashtags: ''\n  });\n}\n\nreturn marketingItems.map(item => ({ json: item }));"
+      },
+      "id": "generate-copy",
+      "name": "Generar Copy",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0],
+      "notes": "Genera 3 borradores por libro: Instagram, Facebook y Newsletter"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {},
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.noBooks }}",
+              "rightValue": true,
+              "type": "org.n8n.n8n.checks.not.type.boolean"
+            }
+          ],
+          "filterRenames": []
+        },
+        "options": {}
+      },
+      "id": "check-empty",
+      "name": "Hay libros?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "create",
+        "databaseId": "6d8b2d0c-f2e6-4740-805a-66b7f8012a9a",
+        "properties": {
+          "Titulo": {"title": "={{ $json.bookTitle + ' - ' + $json.channel }}"},
+          "SKU": {"rich_text": [{"text": {"content": "={{ $json.sku }}"}}]},
+          "ISBN": {"rich_text": [{"text": {"content": "={{ $json.isbn }}"}}]},
+          "Libro": {"rich_text": [{"text": {"content": "={{ $json.bookTitle }}"}}]},
+          "Autor": {"rich_text": [{"text": {"content": "={{ $json.bookAuthor }}"}}]},
+          "Canal": {"select": "={{ $json.channel }}"},
+          "Estado": {"select": "={{ $json.estado }}"},
+          "date:Fecha sugerida:start": {"date": {"start": "={{ $json.fechaSugerida }}"}},
+          "Copy corto": {"rich_text": [{"text": {"content": "={{ $json.copyCorto }}"}}]},
+          "Copy largo": {"rich_text": [{"text": {"content": "={{ $json.copyLargo.substring(0, 2000) }}"}}]},
+          "Hashtags": {"rich_text": [{"text": {"content": "={{ $json.hashtags }}"}}]},
+          "URL portada": {"url": "={{ $json.coverUrl }}"},
+          "URL producto": {"url": "={{ $json.webUrl }}"}
+        }
+      },
+      "id": "create-marketing-record",
+      "name": "Crear Borrador",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [880, -150],
+      "notes": "Crea un borrador de marketing en Notion por cada libro y canal"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": "={{ $json.pageId }}",
+        "properties": {
+          "Marketing generado": {"checkbox": true},
+          "date:Fecha marketing:start": {"date": {"start": "={{ new Date().toISOString().split('T')[0] }}"}}
+        }
+      },
+      "id": "mark-marketing-done",
+      "name": "Marcar Generado",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [1100, -150],
+      "notes": "Marca el libro como marketing generado para no duplicar"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Recopilar todos los libros procesados\nconst allBooks = $('Generar Copy').all().map(r => r.json);\nconst uniqueBooks = [];\nconst seen = new Set();\nfor (const b of allBooks) {\n  if (!seen.has(b.pageId)) {\n    seen.add(b.pageId);\n    uniqueBooks.push(b);\n  }\n}\n\nreturn [{\n  json: {\n    booksCount: uniqueBooks.length,\n    draftsCount: allBooks.length,\n    bookTitles: uniqueBooks.map(b => b.bookTitle + ' (' + b.bookAuthor + ')').join('\\n'),\n    fecha: new Date().toLocaleDateString('es-ES')\n  }\n}];"
+      },
+      "id": "summarize",
+      "name": "Resumen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, -150]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "subject": "=Borradores de marketing generados - {{ $json.fecha }}",
+        "body": {
+          "type": "text",
+          "value": "=Se han generado nuevos borradores de marketing:\n\nLibros procesados: {{ $json.booksCount }}\nBorradores creados: {{ $json.draftsCount }}\n\nLibros:\n{{ $json.bookTitles }}\n\nRevisa los borradores en la base de datos de Marketing en Notion.\n\nRecuerda: los borradores estan listos para que los revises, edites y programes en tus redes sociales."
+        },
+        "additionalFields": {
+          "to": "kamearcos61@gmail.com"
+        }
+      },
+      "id": "notify-email",
+      "name": "Notificar Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1540, -150],
+      "notes": "Email con resumen de borradores generados"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { message: 'No hay libros nuevos para marketing hoy' } }];"
+      },
+      "id": "no-books",
+      "name": "Sin Novedades",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 150]
+    }
+  ],
+  "connections": {
+    "Cron Diario 9AM": {
+      "main": [[{"node": "Buscar Libros Publicados", "type": "main", "index": 0}]]
+    },
+    "Buscar Libros Publicados": {
+      "main": [[{"node": "Generar Copy", "type": "main", "index": 0}]]
+    },
+    "Generar Copy": {
+      "main": [[{"node": "Hay libros?", "type": "main", "index": 0}]]
+    },
+    "Hay libros?": {
+      "main": [
+        [{"node": "Crear Borrador", "type": "main", "index": 0}],
+        [{"node": "Sin Novedades", "type": "main", "index": 0}]
+      ]
+    },
+    "Crear Borrador": {
+      "main": [[{"node": "Marcar Generado", "type": "main", "index": 0}]]
+    },
+    "Marcar Generado": {
+      "main": [[{"node": "Resumen", "type": "main", "index": 0}]]
+    },
+    "Resumen": {
+      "main": [[{"node": "Notificar Email", "type": "main", "index": 0}]]
+    }
+  },
+  "metadata": {
+    "templateId": "segunda-vuelta-libros-marketing",
+    "name": "Segunda Vuelta Libros - Marketing Automatico",
+    "description": "Cron diario: busca libros publicados sin marketing, genera borradores para Instagram/Facebook/Newsletter, marca como generados y notifica por email"
+  }
+}

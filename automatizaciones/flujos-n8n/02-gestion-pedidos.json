@@ -1,0 +1,262 @@
+{
+  "name": "Segunda Vuelta Libros - Gestion de Pedidos",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pedido-recibido",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Pedido",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "pedido-recibido",
+      "notes": "Recibe el pedido desde tu tienda online"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\n\nconst orderId = String(body.order_id || body.id || 'SIN-ID');\nconst customerName = body.customer_name || 'Cliente desconocido';\nconst customerEmail = body.customer_email || body.email || '';\nconst platform = body.platform || 'Web';\nconst shippingAddress = body.shipping_address || '';\nconst paymentStatus = body.payment_status || 'pending';\nconst total = body.total || 0;\nconst items = body.items || [];\n\nif (!items || items.length === 0) {\n  throw new Error('Pedido sin articulos');\n}\n\nconst skus = items.map(i => i.sku).filter(s => s);\nconst itemsSummary = items.map(i => i.title + ' (' + i.sku + ') - ' + i.price + ' eur').join('; ');\n\nreturn [{\n  orderId: orderId,\n  customerName: customerName,\n  customerEmail: customerEmail,\n  platform: platform,\n  shippingAddress: shippingAddress,\n  paymentStatus: paymentStatus,\n  total: total,\n  items: items,\n  skus: skus,\n  itemsSummary: itemsSummary,\n  fecha: new Date().toISOString().split('T')[0]\n}];"
+      },
+      "id": "parse-order",
+      "name": "Procesar Pedido",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "loop-items",
+      "name": "Iterar Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": "382e26a3-8bcc-4c1c-9bb5-65b020ebbe27",
+        "filter": {
+          "filterType": "and",
+          "filters": [
+            {
+              "key": "SKU",
+              "type": "text",
+              "condition": "contains",
+              "value": "={{ $json.skus[0] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "find-book",
+      "name": "Buscar Libro",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [660, 0],
+      "notes": "Busca el libro por SKU en el inventario de Notion"
+    },
+    {
+      "parameters": {
+        "jsCode": "const orderData = $('Procesar Pedido').first().json;\nconst bookResults = $json.results || $json.data || [];\nconst currentItem = $('Iterar Items').first().json;\n\nlet result = {\n  sku: currentItem.sku,\n  title: currentItem.title,\n  status: 'no_encontrado',\n  action: 'incidencia',\n  pageId: null,\n  estadoActual: ''\n};\n\nif (bookResults.length > 0) {\n  const book = bookResults[0];\n  const props = book.properties || {};\n  const estado = props['Estado publicacion'] ? (props['Estado publicacion'].select?.name || '') : '';\n  \n  result.pageId = book.id;\n  result.estadoActual = estado;\n  \n  if (estado === 'Publicado') {\n    result.status = 'disponible';\n    result.action = 'reservar';\n  } else {\n    result.status = 'no_disponible';\n    result.action = 'incidencia';\n  }\n}\n\nreturn [{\n  ...orderData,\n  ...result\n}];"
+      },
+      "id": "check-availability",
+      "name": "Verificar Disponibilidad",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {},
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "reservar",
+              "type": "org.n8n.n8n.checks.not.type.string.equals"
+            }
+          ],
+          "filterRenames": []
+        },
+        "options": {}
+      },
+      "id": "should-reserve",
+      "name": "Reservar?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1100, 0]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": "={{ $json.pageId }}",
+        "properties": {
+          "Estado publicación": {
+            "select": "Reservado"
+          }
+        }
+      },
+      "id": "reserve-book",
+      "name": "Marcar Reservado",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [1320, -150]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    reserved: true,\n    sku: $json.sku,\n    pageId: $json.pageId\n  }\n}];"
+      },
+      "id": "after-reserve",
+      "name": "Tras Reservar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1540, -150]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    reserved: false,\n    sku: $json.sku,\n    reason: $json.status\n  }\n}];"
+      },
+      "id": "after-incidence",
+      "name": "Tras Incidencia",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, 150]
+    },
+    {
+      "parameters": {},
+      "id": "loop-back",
+      "name": "Volver al Loop",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1760, 0],
+      "notes": "Reconecta al nodo Iterar Items para procesar el siguiente libro"
+    },
+    {
+      "parameters": {
+        "jsCode": "const orderData = $('Procesar Pedido').first().json;\n\n// Recopilar todos los resultados del loop\nconst allItems = $('Tras Reservar').all().map(r => r.json);\nconst allIncidences = $('Tras Incidencia').all().map(r => r.json);\n\nconst reservedBooks = allItems.filter(r => r.reserved);\nconst failedBooks = allIncidences.filter(r => !r.reserved);\nconst hasIncidence = failedBooks.length > 0;\n\nconst incidenceDetails = failedBooks.map(f => 'SKU ' + f.sku + ': ' + f.reason);\n\nreturn [{\n  orderId: orderData.orderId,\n  customerName: orderData.customerName,\n  customerEmail: orderData.customerEmail,\n  platform: orderData.platform,\n  shippingAddress: orderData.shippingAddress,\n  total: orderData.total,\n  itemsSummary: orderData.itemsSummary,\n  fecha: orderData.fecha,\n  hasIncidence: hasIncidence,\n  incidenceDetails: incidenceDetails,\n  reservedCount: reservedBooks.length,\n  failedCount: failedBooks.length,\n  orderStatus: hasIncidence ? 'Incidencia' : 'Pagado'\n}];"
+      },
+      "id": "finalize-order",
+      "name": "Finalizar Pedido",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1980, 0]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "create",
+        "databaseId": "3eab2f92-894c-4440-9a95-537bc69ed910",
+        "properties": {
+          "Nº Pedido": {"title": "={{ $json.orderId }}"},
+          "Cliente": {"rich_text": [{"text": {"content": "={{ $json.customerName }}"}}]},
+          "Email": {"rich_text": [{"text": {"content": "={{ $json.customerEmail }}"}}]},
+          "date:Fecha:start": {"date": {"start": "={{ $json.fecha }}"}},
+          "Estado pedido": {"select": "={{ $json.orderStatus }}"},
+          "Importe total": {"number": "={{ $json.total }}"},
+          "Plataforma": {"select": "={{ $json.platform }}"},
+          "Dirección envío": {"rich_text": [{"text": {"content": "={{ $json.shippingAddress }}"}}]},
+          "Artículos": {"rich_text": [{"text": {"content": "={{ $json.itemsSummary }}"}}]},
+          "Notas": {"rich_text": [{"text": {"content": "={{ $json.hasIncidence ? $json.incidenceDetails.join('; ') : 'Pedido procesado automaticamente' }}"}}]}
+        }
+      },
+      "id": "create-order-record",
+      "name": "Crear Registro",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [2200, 0],
+      "notes": "Crea el registro del pedido en la base de datos de Pedidos de Notion"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "subject": "=Nuevo pedido #{{ $json.orderId }} - Segunda Vuelta Libros",
+        "body": {
+          "type": "text",
+          "value": "=Nuevo pedido recibido:\n\nCliente: {{ $json.customerName }}\nEmail: {{ $json.customerEmail }}\nPlataforma: {{ $json.platform }}\nImporte: {{ $json.total }} eur\n\nArticulos:\n{{ $json.itemsSummary }}\n\nDireccion: {{ $json.shippingAddress }}\n\nEstado: {{ $json.hasIncidence ? 'INCIDENCIA - Revisar' : 'OK - Procesado' }}{{ $json.hasIncidence ? '\\n\\nIncidencias: ' + $json.incidenceDetails.join('\\n') : '' }}\n\nLibros reservados: {{ $json.reservedCount }}\nIncidencias: {{ $json.failedCount }}"
+        },
+        "additionalFields": {
+          "to": "kamearcos61@gmail.com"
+        }
+      },
+      "id": "notify-email",
+      "name": "Notificar Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [2420, 0],
+      "notes": "Notificacion interna a tu email"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: !$json.hasIncidence, order_id: $json.orderId, status: $json.hasIncidence ? 'incidencia' : 'procesado', reserved: $json.reservedCount, incidences: $json.failedCount, message: $json.hasIncidence ? 'Pedido con incidencias de stock' : 'Pedido procesado correctamente' }) }}",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2640, 0]
+    }
+  ],
+  "connections": {
+    "Webhook Pedido": {
+      "main": [[{"node": "Procesar Pedido", "type": "main", "index": 0}]]
+    },
+    "Procesar Pedido": {
+      "main": [[{"node": "Iterar Items", "type": "main", "index": 0}]]
+    },
+    "Iterar Items": {
+      "main": [
+        [{"node": "Buscar Libro", "type": "main", "index": 0}],
+        [{"node": "Finalizar Pedido", "type": "main", "index": 0}]
+      ]
+    },
+    "Buscar Libro": {
+      "main": [[{"node": "Verificar Disponibilidad", "type": "main", "index": 0}]]
+    },
+    "Verificar Disponibilidad": {
+      "main": [[{"node": "Reservar?", "type": "main", "index": 0}]]
+    },
+    "Reservar?": {
+      "main": [
+        [{"node": "Marcar Reservado", "type": "main", "index": 0}],
+        [{"node": "Tras Incidencia", "type": "main", "index": 0}]
+      ]
+    },
+    "Marcar Reservado": {
+      "main": [[{"node": "Tras Reservar", "type": "main", "index": 0}]]
+    },
+    "Tras Reservar": {
+      "main": [[{"node": "Volver al Loop", "type": "main", "index": 0}]]
+    },
+    "Tras Incidencia": {
+      "main": [[{"node": "Volver al Loop", "type": "main", "index": 0}]]
+    },
+    "Volver al Loop": {
+      "main": [[{"node": "Iterar Items", "type": "main", "index": 0}]]
+    },
+    "Finalizar Pedido": {
+      "main": [[{"node": "Crear Registro", "type": "main", "index": 0}]]
+    },
+    "Crear Registro": {
+      "main": [[{"node": "Notificar Email", "type": "main", "index": 0}]]
+    },
+    "Notificar Email": {
+      "main": [[{"node": "Responder", "type": "main", "index": 0}]]
+    }
+  },
+  "metadata": {
+    "templateId": "segunda-vuelta-libros-pedidos",
+    "name": "Segunda Vuelta Libros - Gestion de Pedidos",
+    "description": "Webhook de pedido -> verifica stock -> reserva libros -> crea registro -> notifica por email"
+  }
+}

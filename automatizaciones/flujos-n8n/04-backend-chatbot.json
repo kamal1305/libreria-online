@@ -1,0 +1,308 @@
+{
+  "name": "Segunda Vuelta Libros - Soporte Chatbot",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "soporte-chatbot",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Soporte",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "soporte-chatbot",
+      "notes": "Recibe consultas del chatbot de Voiceflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\n\n// Formato esperado desde Voiceflow:\n// {\n//   \"intent\": \"faq|order_status|escalation\",\n//   \"query\": \"cuanto tarda el envio\",\n//   \"customer_name\": \"Maria\",\n//   \"customer_email\": \"maria@email.com\",\n//   \"order_id\": \"PED-001\",\n//   \"channel\": \"Web\"\n// }\n\nconst intent = body.intent || 'faq';\nconst query = (body.query || '').toLowerCase();\nconst customerName = body.customer_name || 'Cliente';\nconst customerEmail = body.customer_email || '';\nconst orderId = body.order_id || '';\nconst channel = body.channel || 'Web';\n\nreturn [{\n  json: {\n    intent: intent,\n    query: query,\n    customerName: customerName,\n    customerEmail: customerEmail,\n    orderId: orderId,\n    channel: channel,\n    needsEscalation: false\n  }\n}];"
+      },
+      "id": "parse-request",
+      "name": "Procesar Consulta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {},
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.intent }}",
+              "rightValue": "order_status",
+              "type": "org.n8n.n8n.checks.not.type.string.equals"
+            }
+          ],
+          "filterRenames": []
+        },
+        "options": {}
+      },
+      "id": "check-intent",
+      "name": "Tipo Consulta",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {},
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.orderId }}",
+              "rightValue": "",
+              "type": "org.n8n.n8n.checks.not.type.string.equals"
+            },
+            {
+              "leftValue": "={{ $json.customerEmail }}",
+              "rightValue": "",
+              "type": "org.n8n.n8n.checks.not.type.string.equals"
+            }
+          ],
+          "filterRenames": []
+        },
+        "options": {}
+      },
+      "id": "check-order-data",
+      "name": "Tiene datos?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [660, -200]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": "3eab2f92-894c-4440-9a95-537bc69ed910",
+        "filter": {
+          "filterType": "and",
+          "filters": [
+            {
+              "key": "Nº Pedido",
+              "type": "text",
+              "condition": "equals",
+              "value": "={{ $('Procesar Consulta').first().json.orderId }}"
+            },
+            {
+              "key": "Email",
+              "type": "text",
+              "condition": "equals",
+              "value": "={{ $('Procesar Consulta').first().json.customerEmail }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "query-order",
+      "name": "Buscar Pedido",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [880, -300],
+      "notes": "Busca el pedido por numero Y email (privacidad)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const orders = $json.results || $json.data || [];\nconst req = $('Procesar Consulta').first().json;\n\nif (orders.length === 0) {\n  return [{\n    json: {\n      response: 'No he encontrado ningun pedido con ese numero y email. Verifica que los datos son correctos. Si necesitas ayuda, puedo ponerte en contacto con una persona.',\n      action: 'respond',\n      needsEscalation: false\n    }\n  }];\n}\n\nconst order = orders[0];\nconst props = order.properties || {};\nconst estado = props['Estado pedido']?.select?.name || 'desconocido';\nconst fecha = props['date:Fecha:start'] || '';\nconst total = props['Importe total']?.number || 0;\nconst articulos = props['Artículos']?.rich_text?.[0]?.plain_text || '';\n\nreturn [{\n  json: {\n    response: `Tu pedido ${req.orderId} esta en estado: ${estado}.` + (fecha ? ` Fecha: ${fecha}.` : '') + (total ? ` Importe: ${total} euros.` : '') + (articulos ? ` Articulos: ${articulos}.` : '') + ` Si tienes mas dudas, no dudes en preguntar.`,\n    action: 'respond',\n    needsEscalation: false\n  }\n}];"
+      },
+      "id": "format-order-response",
+      "name": "Respuesta Pedido",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, -300]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    response: 'Para consultar el estado de tu pedido necesito tu numero de pedido y el email con el que lo realizaste. Por ejemplo: numero PED-001 y email maria@email.com.',\n    action: 'respond',\n    needsEscalation: false\n  }\n}];"
+      },
+      "id": "ask-order-data",
+      "name": "Pedir Datos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, -100]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": "25956ca5-6a44-4b1d-b96a-b012cab862d0",
+        "filter": {
+          "filterType": "and",
+          "filters": [
+            {
+              "key": "Estado",
+              "type": "select",
+              "condition": "equals",
+              "value": "Publicado"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "query-faq",
+      "name": "Buscar FAQ",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [660, 100],
+      "notes": "Obtiene todas las FAQ publicadas"
+    },
+    {
+      "parameters": {
+        "jsCode": "const faqs = $json.results || $json.data || [];\nconst query = $('Procesar Consulta').first().json.query;\n\nif (faqs.length === 0) {\n  return [{\n    json: {\n      response: 'Lo siento, no tengo informacion sobre eso en este momento. Te puedo poner en contacto con una persona si lo prefieres.',\n      action: 'respond',\n      needsEscalation: true,\n      faqMatch: false\n    }\n  }];\n}\n\n// Buscar la FAQ que mejor coincida por palabras clave\nlet bestMatch = null;\nlet bestScore = 0;\n\nfor (const faq of faqs) {\n  const props = faq.properties || {};\n  const question = (props.Pregunta?.title?.[0]?.plain_text || '').toLowerCase();\n  const keywords = (props['Palabras clave']?.rich_text?.[0]?.plain_text || '').toLowerCase().split(',').map(k => k.trim());\n  const respuestaCorta = props['Respuesta corta']?.rich_text?.[0]?.plain_text || '';\n  const respuestaCompleta = props['Respuesta completa']?.rich_text?.[0]?.plain_text || '';\n  const escalarHumano = props['Escalar a humano'] === '__YES__';\n  \n  let score = 0;\n  // Coincidencia por pregunta\n  if (query.includes(question) || question.includes(query)) score += 5;\n  // Coincidencia por palabras clave\n  for (const kw of keywords) {\n    if (kw && query.includes(kw)) score += 3;\n  }\n  // Coincidencia por palabras en la pregunta\n  const queryWords = query.split(' ').filter(w => w.length > 2);\n  for (const w of queryWords) {\n    if (question.includes(w)) score += 1;\n  }\n  \n  if (score > bestScore) {\n    bestScore = score;\n    bestMatch = {\n      question: props.Pregunta?.title?.[0]?.plain_text || '',\n      respuestaCorta: respuestaCorta,\n      respuestaCompleta: respuestaCompleta,\n      escalarHumano: escalarHumano,\n      pageId: faq.id\n    };\n  }\n}\n\nif (bestMatch && bestScore > 0) {\n  const needsEscalation = bestMatch.escalarHumano;\n  let response = bestMatch.respuestaCompleta || bestMatch.respuestaCorta;\n  \n  if (needsEscalation) {\n    response += '\\n\\nSi necesitas mas detalles, puedo ponerte en contacto con una persona que te ayudara.';\n  }\n  \n  return [{\n    json: {\n      response: response,\n      action: 'respond',\n      needsEscalation: needsEscalation,\n      faqMatch: true,\n      faqQuestion: bestMatch.question\n    }\n  }];\n}\n\n// Sin coincidencia\nreturn [{\n  json: {\n    response: 'No estoy seguro de haber entendido tu consulta. Puedo ayudarte con: envios, devoluciones, reservas, estado de libros, pagos, compra de libros o consultar tu pedido. Si prefieres, puedo ponerte en contacto con una persona.',\n    action: 'respond',\n    needsEscalation: true,\n    faqMatch: false\n  }\n}];"
+      },
+      "id": "match-faq",
+      "name": "Emparejar FAQ",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 100]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {},
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.needsEscalation }}",
+              "rightValue": true,
+              "type": "org.n8n.n8n.checks.not.type.boolean"
+            }
+          ],
+          "filterRenames": []
+        },
+        "options": {}
+      },
+      "id": "check-escalation",
+      "name": "Escalar?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1100, 100]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "create",
+        "databaseId": "81f36a12-0882-4404-8a57-568b8be42b24",
+        "properties": {
+          "Asunto": {"title": "=Consulta chatbot - {{ $('Procesar Consulta').first().json.query }}"},
+          "Cliente": {"rich_text": [{"text": {"content": "={{ $('Procesar Consulta').first().json.customerName }}"}}]},
+          "Email": {"rich_text": [{"text": {"content": "={{ $('Procesar Consulta').first().json.customerEmail }}"}}]},
+          "Canal": {"select": "={{ $('Procesar Consulta').first().json.channel }}"},
+          "Tema": {"select": "Otro"},
+          "Prioridad": {"select": "Media"},
+          "Estado ticket": {"select": "Nuevo"},
+          "Mensaje cliente": {"rich_text": [{"text": {"content": "={{ $('Procesar Consulta').first().json.query }}"}}]},
+          "Resumen": {"rich_text": [{"text": {"content": "=Escala desde chatbot. FAQ no encontro respuesta o requiere atencion humana."}}]},
+          "date:Fecha:start": {"date": {"start": "={{ new Date().toISOString().split('T')[0] }}"}}
+        }
+      },
+      "id": "create-ticket",
+      "name": "Crear Ticket",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [1320, 200],
+      "notes": "Crea un ticket de soporte en Notion cuando se escala a humano"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "subject": "=Nuevo ticket de soporte - {{ $('Procesar Consulta').first().json.customerName }}",
+        "body": {
+          "type": "text",
+          "value": "=Se ha escalado una consulta del chatbot a atencion humana.\n\nCliente: {{ $('Procesar Consulta').first().json.customerName }}\nEmail: {{ $('Procesar Consulta').first().json.customerEmail }}\nCanal: {{ $('Procesar Consulta').first().json.channel }}\nConsulta: {{ $('Procesar Consulta').first().json.query }}\n\nRevisa el ticket en la base de datos de Soporte en Notion y responde al cliente."
+        },
+        "additionalFields": {
+          "to": "kamearcos61@gmail.com"
+        }
+      },
+      "id": "notify-escalation",
+      "name": "Notificar Escalado",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1540, 200],
+      "notes": "Te avisa cuando una consulta se escala a humano"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    response: $json.response + '\\n\\nHe pasado tu consulta al equipo y te responderemos lo antes posible por email.',\n    action: 'respond'\n  }\n}];"
+      },
+      "id": "add-escalation-msg",
+      "name": "Mensaje Escalado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1760, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ response: $json.response, action: $json.action }) }}",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1980, 100]
+    }
+  ],
+  "connections": {
+    "Webhook Soporte": {
+      "main": [[{"node": "Procesar Consulta", "type": "main", "index": 0}]]
+    },
+    "Procesar Consulta": {
+      "main": [[{"node": "Tipo Consulta", "type": "main", "index": 0}]]
+    },
+    "Tipo Consulta": {
+      "main": [
+        [{"node": "Tiene datos?", "type": "main", "index": 0}],
+        [{"node": "Buscar FAQ", "type": "main", "index": 0}]
+      ]
+    },
+    "Tiene datos?": {
+      "main": [
+        [{"node": "Buscar Pedido", "type": "main", "index": 0}],
+        [{"node": "Pedir Datos", "type": "main", "index": 0}]
+      ]
+    },
+    "Buscar Pedido": {
+      "main": [[{"node": "Respuesta Pedido", "type": "main", "index": 0}]]
+    },
+    "Respuesta Pedido": {
+      "main": [[{"node": "Responder", "type": "main", "index": 0}]]
+    },
+    "Pedir Datos": {
+      "main": [[{"node": "Responder", "type": "main", "index": 0}]]
+    },
+    "Buscar FAQ": {
+      "main": [[{"node": "Emparejar FAQ", "type": "main", "index": 0}]]
+    },
+    "Emparejar FAQ": {
+      "main": [[{"node": "Escalar?", "type": "main", "index": 0}]]
+    },
+    "Escalar?": {
+      "main": [
+        [{"node": "Responder", "type": "main", "index": 0}],
+        [{"node": "Crear Ticket", "type": "main", "index": 0}]
+      ]
+    },
+    "Crear Ticket": {
+      "main": [[{"node": "Notificar Escalado", "type": "main", "index": 0}]]
+    },
+    "Notificar Escalado": {
+      "main": [[{"node": "Mensaje Escalado", "type": "main", "index": 0}]]
+    },
+    "Mensaje Escalado": {
+      "main": [[{"node": "Responder", "type": "main", "index": 0}]]
+    }
+  },
+  "metadata": {
+    "templateId": "segunda-vuelta-libros-soporte",
+    "name": "Segunda Vuelta Libros - Soporte Chatbot",
+    "description": "Backend del chatbot: responde FAQ, consulta pedidos y escala a humano con ticket en Notion + email"
+  }
+}

@@ -1,0 +1,179 @@
+{
+  "name": "Segunda Vuelta Libros - IA Precios y Rebajas",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [1],
+              "triggerAtHour": 10
+            }
+          ]
+        }
+      },
+      "id": "cron-trigger",
+      "name": "Cron Lunes 10AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0],
+      "notes": "Ejecuta cada lunes a las 10:00 (despues del reporte de metricas)"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": "382e26a3-8bcc-4c1c-9bb5-65b020ebbe27",
+        "options": {}
+      },
+      "id": "query-inventory",
+      "name": "Inventario",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": "eaefb7ca-2354-4f64-8bb0-189349d59130",
+        "options": {}
+      },
+      "id": "query-sales",
+      "name": "Ventas",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [220, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "const inventory = $('Inventario').first().json.results || $('Inventario').first().json.data || [];\nconst sales = $('Ventas').first().json.results || $('Ventas').first().json.data || [];\n\nconst now = new Date();\nconst dayMs = 86400000;\n\n// Parsear inventario\nconst books = inventory.map(book => {\n  const p = book.properties || {};\n  return {\n    pageId: book.id,\n    title: p.Nombre?.title?.[0]?.plain_text || '',\n    author: p.Autor?.rich_text?.[0]?.plain_text || '',\n    genre: p.Genero?.select?.name || 'Otros',\n    estadoPublicacion: p['Estado publicacion']?.select?.name || '',\n    coste: p.Coste?.number || 0,\n    precioVenta: p['Precio venta']?.number || 0,\n    fechaEntrada: p['date:Fecha entrada:start'] || '',\n    sku: p.SKU?.number || p.SKU?.formula_string || '',\n    marketingGenerado: p['Marketing generado'] === '__YES__'\n  };\n});\n\n// Genero mas vendido (para promocion)\nconst generoCount = {};\nsales.forEach(s => {\n  const p = s.properties || {};\n  const g = p.Genero?.select?.name;\n  if (g) generoCount[g] = (generoCount[g] || 0) + 1;\n});\nconst topGenero = Object.entries(generoCount).sort((a,b) => b[1] - a[1])[0];\nconst topGeneroName = topGenero ? topGenero[0] : null;\n\n// Solo libros publicados\nconst disponibles = books.filter(b => b.estadoPublicacion === 'Publicado');\n\nconst recomendaciones = [];\n\nfor (const book of disponibles) {\n  if (!book.fechaEntrada) continue;\n  \n  const diasEnStock = Math.floor((now - new Date(book.fechaEntrada)) / dayMs);\n  const margenEur = book.precioVenta - book.coste;\n  const margenPct = book.precioVenta > 0 ? (margenEur / book.precioVenta) * 100 : 0;\n  const precioMinimo = book.coste * 1.5; // Margen minimo del 50%\n  \n  // REGLA 1: Libro parado +90 dias -> rebajar 20%\n  if (diasEnStock > 90) {\n    let precioSugerido = Math.round((book.precioVenta * 0.8) * 100) / 100;\n    if (precioSugerido < precioMinimo) precioSugerido = Math.round(precioMinimo * 100) / 100;\n    \n    recomendaciones.push({\n      titulo: `${book.title} - Rebaja +90 dias`,\n      tipo: 'Rebaja',\n      sku: String(book.sku),\n      libro: book.title,\n      autor: book.author,\n      genero: book.genre,\n      precioActual: book.precioVenta,\n      precioSugerido: precioSugerido,\n      motivo: `Libro en stock ${diasEnStock} dias sin vender. Rebaja del 20%. Precio minimo: ${precioMinimo.toFixed(2)} eur (margen 50%).`,\n      confianza: 'Alta',\n      accion: 'Rebajar',\n      estado: 'Pendiente',\n      fecha: now.toISOString().split('T')[0],\n      pageId: book.pageId\n    });\n  }\n  // REGLA 2: Libro parado +60 dias -> rebajar 10%\n  else if (diasEnStock > 60) {\n    let precioSugerido = Math.round((book.precioVenta * 0.9) * 100) / 100;\n    if (precioSugerido < precioMinimo) precioSugerido = Math.round(precioMinimo * 100) / 100;\n    \n    recomendaciones.push({\n      titulo: `${book.title} - Rebaja +60 dias`,\n      tipo: 'Rebaja',\n      sku: String(book.sku),\n      libro: book.title,\n      autor: book.author,\n      genero: book.genre,\n      precioActual: book.precioVenta,\n      precioSugerido: precioSugerido,\n      motivo: `Libro en stock ${diasEnStock} dias sin vender. Rebaja del 10%. Precio minimo: ${precioMinimo.toFixed(2)} eur.`,\n      confianza: 'Media',\n      accion: 'Rebajar',\n      estado: 'Pendiente',\n      fecha: now.toISOString().split('T')[0],\n      pageId: book.pageId\n    });\n  }\n  // REGLA 3: Libro parado +30 dias -> promocionar\n  else if (diasEnStock > 30) {\n    if (book.marketingGenerado) {\n      recomendaciones.push({\n        titulo: `${book.title} - Promocion +30 dias`,\n        tipo: 'Promocion',\n        sku: String(book.sku),\n        libro: book.title,\n        autor: book.author,\n        genero: book.genre,\n        precioActual: book.precioVenta,\n        precioSugerido: book.precioVenta,\n        motivo: `Libro en stock ${diasEnStock} dias. Marketing ya generado. Sugerencia: destacar en redes o newsletter.`,\n        confianza: 'Media',\n        accion: 'Promocionar',\n        estado: 'Pendiente',\n        fecha: now.toISOString().split('T')[0],\n        pageId: book.pageId\n      });\n    } else {\n      recomendaciones.push({\n        titulo: `${book.title} - Generar marketing`,\n        tipo: 'Promocion',\n        sku: String(book.sku),\n        libro: book.title,\n        autor: book.author,\n        genero: book.genre,\n        precioActual: book.precioVenta,\n        precioSugerido: book.precioVenta,\n        motivo: `Libro en stock ${diasEnStock} dias sin marketing generado. Generar copy y publicar en redes.`,\n        confianza: 'Alta',\n        accion: 'Promocionar',\n        estado: 'Pendiente',\n        fecha: now.toISOString().split('T')[0],\n        pageId: book.pageId\n      });\n    }\n  }\n  // REGLA 4: Genero top en ventas -> promocionar libros de ese genero\n  if (topGeneroName && book.genre === topGeneroName && diasEnStock < 30 && margenPct > 60) {\n    recomendaciones.push({\n      titulo: `${book.title} - Destacar (genero top)`,\n      tipo: 'Promocion',\n      sku: String(book.sku),\n      libro: book.title,\n      autor: book.author,\n      genero: book.genre,\n      precioActual: book.precioVenta,\n      precioSugerido: book.precioVenta,\n      motivo: `Genero \"${book.genre}\" es el mas vendido (${topGenero[1]} ventas). Margen alto (${margenPct.toFixed(0)}%). Destacar en proxima newsletter.`,\n      confianza: 'Alta',\n      accion: 'Promocionar',\n      estado: 'Pendiente',\n      fecha: now.toISOString().split('T')[0],\n      pageId: book.pageId\n    });\n  }\n  // REGLA 5: Margen bajo -> revisar precio\n  if (margenPct < 40 && book.precioVenta > 0) {\n    let precioSugerido = Math.round((book.coste * 2) * 100) / 100;\n    recomendaciones.push({\n      titulo: `${book.title} - Margen bajo`,\n      tipo: 'Precio',\n      sku: String(book.sku),\n      libro: book.title,\n      autor: book.author,\n      genero: book.genre,\n      precioActual: book.precioVenta,\n      precioSugerido: precioSugerido,\n      motivo: `Margen actual: ${margenPct.toFixed(0)}%. Precio sugerido: ${precioSugerido} eur (margen 100%). Revisar si el precio de venta es competitivo.`,\n      confianza: 'Media',\n      accion: 'Revisar',\n      estado: 'Pendiente',\n      fecha: now.toISOString().split('T')[0],\n      pageId: book.pageId\n    });\n  }\n  // REGLA 6: Margen muy alto -> posible subida de precio\n  if (margenPct > 150 && book.precioVenta > 0 && diasEnStock < 15) {\n    let precioSugerido = Math.round((book.precioVenta * 1.1) * 100) / 100;\n    recomendaciones.push({\n      titulo: `${book.title} - Posible subida`,\n      tipo: 'Precio',\n      sku: String(book.sku),\n      libro: book.title,\n      autor: book.author,\n      genero: book.genre,\n      precioActual: book.precioVenta,\n      precioSugerido: precioSugerido,\n      motivo: `Margen muy alto (${margenPct.toFixed(0)}%) y venta reciente. Subir 10% a ${precioSugerido} eur puede maximizar beneficio.`,\n      confianza: 'Baja',\n      accion: 'Revisar',\n      estado: 'Pendiente',\n      fecha: now.toISOString().split('T')[0],\n      pageId: book.pageId\n    });\n  }\n}\n\n// Si no hay recomendaciones\nif (recomendaciones.length === 0) {\n  return [{ json: { noRecomendaciones: true, message: 'No hay recomendaciones de precio esta semana. Todo el inventario esta en buen estado.' } }];\n}\n\nreturn recomendaciones.map(r => ({ json: r }));"
+      },
+      "id": "compute-recommendations",
+      "name": "Calcular Recomendaciones",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {},
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.noRecomendaciones }}",
+              "rightValue": true,
+              "type": "org.n8n.n8n.checks.not.type.boolean"
+            }
+          ],
+          "filterRenames": []
+        },
+        "options": {}
+      },
+      "id": "check-empty",
+      "name": "Hay recomendaciones?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [700, 0]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "create",
+        "databaseId": "IA_DECISIONES_DATABASE_ID",
+        "properties": {
+          "Titulo": {"title": "={{ $json.titulo }}"},
+          "Tipo recomendacion": {"select": "={{ $json.tipo }}"},
+          "SKU": {"rich_text": [{"text": {"content": "={{ $json.sku }}"}}]},
+          "Libro": {"rich_text": [{"text": {"content": "={{ $json.libro }}"}}]},
+          "Autor": {"rich_text": [{"text": {"content": "={{ $json.autor }}"}}]},
+          "Genero": {"select": "={{ $json.genero }}"},
+          "Precio actual": {"number": "={{ $json.precioActual }}"},
+          "Precio sugerido": {"number": "={{ $json.precioSugerido }}"},
+          "Motivo": {"rich_text": [{"text": {"content": "={{ $json.motivo }}"}}]},
+          "Confianza": {"select": "={{ $json.confianza }}"},
+          "Accion sugerida": {"select": "={{ $json.accion }}"},
+          "Estado": {"select": "={{ $json.estado }}"},
+          "date:Fecha:start": {"date": {"start": "={{ $json.fecha }}"}}
+        }
+      },
+      "id": "create-decision",
+      "name": "Crear Recomendacion",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [920, -150],
+      "notes": "IMPORTANTE: Reemplaza IA_DECISIONES_DATABASE_ID con el ID de tu base 'IA Decisiones' en Notion"
+    },
+    {
+      "parameters": {
+        "jsCode": "const allRecs = $('Calcular Recomendaciones').all().map(r => r.json).filter(r => !r.noRecomendaciones);\n\nconst rebajas = allRecs.filter(r => r.tipo === 'Rebaja');\nconst promociones = allRecs.filter(r => r.tipo === 'Promocion');\nconst precios = allRecs.filter(r => r.tipo === 'Precio');\n\nreturn [{\n  json: {\n    total: allRecs.length,\n    rebajas: rebajas.length,\n    promociones: promociones.length,\n    precios: precios.length,\n    detalle: allRecs.map(r => `- ${r.titulo}: ${r.accion} (confianza: ${r.confianza})`).join('\\n'),\n    fecha: new Date().toISOString().split('T')[0]\n  }\n}];"
+      },
+      "id": "summarize",
+      "name": "Resumen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1140, -150]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "subject": "=Recomendaciones de IA - Segunda Vuelta Libros - {{ $json.fecha }}",
+        "body": {
+          "type": "text",
+          "value": "=El asistente de IA ha generado recomendaciones para tu libreria:\n\nTotal de recomendaciones: {{ $json.total }}\n- Rebajas sugeridas: {{ $json.rebajas }}\n- Promociones: {{ $json.promociones }}\n- Revisiones de precio: {{ $json.precios }}\n\nDetalle:\n{{ $json.detalle }}\n\nRevisa las recomendaciones en la base 'IA Decisiones' en Notion. Aprueba o descarta cada una antes de aplicarla."
+        },
+        "additionalFields": {
+          "to": "kamearcos61@gmail.com"
+        }
+      },
+      "id": "send-email",
+      "name": "Email Recomendaciones",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1360, -150]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { message: 'No hay recomendaciones de precio esta semana. Todo el inventario esta en buen estado.' } }];"
+      },
+      "id": "no-recs",
+      "name": "Sin Recomendaciones",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [920, 150]
+    }
+  ],
+  "connections": {
+    "Cron Lunes 10AM": {
+      "main": [[{"node": "Inventario", "type": "main", "index": 0}]]
+    },
+    "Inventario": {
+      "main": [[{"node": "Calcular Recomendaciones", "type": "main", "index": 0}]]
+    },
+    "Ventas": {
+      "main": [[{"node": "Calcular Recomendaciones", "type": "main", "index": 0}]]
+    },
+    "Calcular Recomendaciones": {
+      "main": [[{"node": "Hay recomendaciones?", "type": "main", "index": 0}]]
+    },
+    "Hay recomendaciones?": {
+      "main": [
+        [{"node": "Crear Recomendacion", "type": "main", "index": 0}],
+        [{"node": "Sin Recomendaciones", "type": "main", "index": 0}]
+      ]
+    },
+    "Crear Recomendacion": {
+      "main": [[{"node": "Resumen", "type": "main", "index": 0}]]
+    },
+    "Resumen": {
+      "main": [[{"node": "Email Recomendaciones", "type": "main", "index": 0}]]
+    }
+  },
+  "metadata": {
+    "templateId": "segunda-vuelta-libros-ia-precios",
+    "name": "Segunda Vuelta Libros - IA Precios y Rebajas",
+    "description": "Cron semanal: analiza inventario y ventas, genera recomendaciones de precio, rebaja y promocion basadas en reglas"
+  }
+}

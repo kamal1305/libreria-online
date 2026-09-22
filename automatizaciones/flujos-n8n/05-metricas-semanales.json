@@ -1,0 +1,146 @@
+{
+  "name": "Segunda Vuelta Libros - Metricas Semanales",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "cron-trigger",
+      "name": "Cron Lunes 9AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0],
+      "notes": "Ejecuta cada lunes a las 9:00"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": "382e26a3-8bcc-4c1c-9bb5-65b020ebbe27",
+        "options": {}
+      },
+      "id": "query-inventory",
+      "name": "Inventario",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": "eaefb7ca-2354-4f64-8bb0-189349d59130",
+        "options": {}
+      },
+      "id": "query-sales",
+      "name": "Ventas",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [220, 200]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": "3eab2f92-894c-4440-9a95-537bc69ed910",
+        "options": {}
+      },
+      "id": "query-orders",
+      "name": "Pedidos",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [220, 400]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": "81f36a12-0882-4404-8a57-568b8be42b24",
+        "options": {}
+      },
+      "id": "query-support",
+      "name": "Soporte",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [220, 600]
+    },
+    {
+      "parameters": {
+        "jsCode": "// === RECOPILAR DATOS ===\nconst inventory = $('Inventario').first().json.results || $('Inventario').first().json.data || [];\nconst sales = $('Ventas').first().json.results || $('Ventas').first().json.data || [];\nconst orders = $('Pedidos').first().json.results || $('Pedidos').first().json.data || [];\nconst support = $('Soporte').first().json.results || $('Soporte').first().json.data || [];\n\n// === PARSEAR INVENTARIO ===\nconst inventoryParsed = inventory.map(book => {\n  const p = book.properties || {};\n  return {\n    title: p.Nombre?.title?.[0]?.plain_text || '',\n    author: p.Autor?.rich_text?.[0]?.plain_text || '',\n    genre: p.Genero?.select?.name || 'Otros',\n    estadoPublicacion: p['Estado publicacion']?.select?.name || '',\n    estadoFisico: p['Estado fisico']?.select?.name || '',\n    coste: p.Coste?.number || 0,\n    precioVenta: p['Precio venta']?.number || 0,\n    fechaEntrada: p['date:Fecha entrada:start'] || '',\n    marketingGenerado: p['Marketing generado'] === '__YES__',\n    sku: p.SKU?.number || p.SKU?.formula_string || '',\n    isbn: p.ISBN?.rich_text?.[0]?.plain_text || ''\n  };\n});\n\n// === PARSEAR VENTAS ===\nconst salesParsed = sales.map(sale => {\n  const p = sale.properties || {};\n  return {\n    titulo: p.Titulo?.title?.[0]?.plain_text || '',\n    orderId: p['Nº Pedido']?.rich_text?.[0]?.plain_text || '',\n    sku: p.SKU?.rich_text?.[0]?.plain_text || '',\n    autor: p.Autor?.rich_text?.[0]?.plain_text || '',\n    genero: p.Genero?.select?.name || 'Otros',\n    plataforma: p.Plataforma?.select?.name || 'Otros',\n    precioVenta: p['Precio venta']?.number || 0,\n    coste: p.Coste?.number || 0,\n    margenEur: p['Margen eur']?.number || 0,\n    margenPct: p['Margen %']?.number || 0,\n    diasStock: p['Dias en stock']?.number || 0,\n    estadoPedido: p['Estado pedido']?.select?.name || '',\n    fechaVenta: p['date:Fecha venta:start'] || ''\n  };\n});\n\n// === PARSEAR PEDIDOS ===\nconst ordersParsed = orders.map(order => {\n  const p = order.properties || {};\n  return {\n    orderId: p['Nº Pedido']?.title?.[0]?.plain_text || '',\n    cliente: p.Cliente?.rich_text?.[0]?.plain_text || '',\n    email: p.Email?.rich_text?.[0]?.plain_text || '',\n    estadoPedido: p['Estado pedido']?.select?.name || '',\n    importeTotal: p['Importe total']?.number || 0,\n    plataforma: p.Plataforma?.select?.name || 'Otros',\n    fecha: p['date:Fecha:start'] || ''\n  };\n});\n\n// === PARSEAR SOPORTE ===\nconst supportParsed = support.map(ticket => {\n  const p = ticket.properties || {};\n  return {\n    asunto: p.Asunto?.title?.[0]?.plain_text || '',\n    cliente: p.Cliente?.rich_text?.[0]?.plain_text || '',\n    canal: p.Canal?.select?.name || '',\n    tema: p.Tema?.select?.name || 'Otro',\n    prioridad: p.Prioridad?.select?.name || 'Media',\n    estadoTicket: p['Estado ticket']?.select?.name || '',\n    fecha: p['date:Fecha:start'] || ''\n  };\n});\n\n// === CALCULAR FECHAS ===\nconst now = new Date();\nconst oneWeekAgo = new Date(now.getTime() - 7 * 86400000);\nconst oneMonthAgo = new Date(now.getTime() - 30 * 86400000);\nconst formatDate = d => d.toISOString().split('T')[0];\n\n// Filtrar ventas de esta semana\nconst salesThisWeek = salesParsed.filter(s => {\n  if (!s.fechaVenta) return false;\n  const d = new Date(s.fechaVenta);\n  return d >= oneWeekAgo && d <= now;\n});\n\nconst salesThisMonth = salesParsed.filter(s => {\n  if (!s.fechaVenta) return false;\n  const d = new Date(s.fechaVenta);\n  return d >= oneMonthAgo && d <= now;\n});\n\n// === METRICAS DE VENTAS ===\nconst totalVentasSemana = salesThisWeek.reduce((sum, s) => sum + s.precioVenta, 0);\nconst totalVentasMes = salesThisMonth.reduce((sum, s) => sum + s.precioVenta, 0);\nconst numPedidosSemana = ordersParsed.filter(o => o.fecha && new Date(o.fecha) >= oneWeekAgo).length;\nconst numLibrosVendidosSemana = salesThisWeek.length;\nconst ticketMedio = numPedidosSemana > 0 ? totalVentasSemana / numPedidosSemana : 0;\n\n// Ventas por plataforma\nconst ventasPorPlataforma = {};\nsalesThisWeek.forEach(s => {\n  ventasPorPlataforma[s.plataforma] = (ventasPorPlataforma[s.plataforma] || 0) + s.precioVenta;\n});\n\n// Top generos vendidos\nconst generosVendidos = {};\nsalesParsed.forEach(s => {\n  generosVendidos[s.genero] = (generosVendidos[s.genero] || 0) + 1;\n});\nconst topGeneros = Object.entries(generosVendidos).sort((a, b) => b[1] - a[1]).slice(0, 5);\n\n// Top autores vendidos\nconst autoresVendidos = {};\nsalesParsed.forEach(s => {\n  autoresVendidos[s.autor] = (autoresVendidos[s.autor] || 0) + 1;\n});\nconst topAutores = Object.entries(autoresVendidos).sort((a, b) => b[1] - a[1]).slice(0, 5);\n\n// === METRICAS DE RENTABILIDAD ===\nconst costeTotalVendido = salesParsed.reduce((sum, s) => sum + s.coste, 0);\nconst margenBrutoEur = salesParsed.reduce((sum, s) => sum + s.margenEur, 0);\nconst margenBrutoPct = totalVentasMes > 0 ? (margenBrutoEur / salesParsed.reduce((s, x) => s + x.precioVenta, 0)) * 100 : 0;\n\n// Margen por genero\nconst margenPorGenero = {};\nsalesParsed.forEach(s => {\n  if (!margenPorGenero[s.genero]) margenPorGenero[s.genero] = { margen: 0, ventas: 0 };\n  margenPorGenero[s.genero].margen += s.margenEur;\n  margenPorGenero[s.genero].ventas += s.precioVenta;\n});\n\n// === METRICAS DE INVENTARIO ===\nconst stockDisponible = inventoryParsed.filter(b => b.estadoPublicacion === 'Publicado');\nconst stockReservado = inventoryParsed.filter(b => b.estadoPublicacion === 'Reservado');\nconst stockVendido = inventoryParsed.filter(b => b.estadoPublicacion === 'Vendido');\nconst stockRetirado = inventoryParsed.filter(b => b.estadoPublicacion === 'Retirado');\n\nconst valorInventario = stockDisponible.reduce((sum, b) => sum + b.precioVenta, 0);\nconst costeInventario = stockDisponible.reduce((sum, b) => sum + b.coste, 0);\n\n// Libros sin vender +30/+60/+90 dias\nconst librosSinVender30 = inventoryParsed.filter(b => {\n  if (!b.fechaEntrada) return false;\n  const dias = (now - new Date(b.fechaEntrada)) / 86400000;\n  return b.estadoPublicacion === 'Publicado' && dias > 30;\n});\nconst librosSinVender60 = librosSinVender30.filter(b => {\n  const dias = (now - new Date(b.fechaEntrada)) / 86400000;\n  return dias > 60;\n});\nconst librosSinVender90 = librosSinVender60.filter(b => {\n  const dias = (now - new Date(b.fechaEntrada)) / 86400000;\n  return dias > 90;\n});\n\n// Stock por genero\nconst stockPorGenero = {};\nstockDisponible.forEach(b => {\n  stockPorGenero[b.genre] = (stockPorGenero[b.genre] || 0) + 1;\n});\n\n// Libros publicados sin marketing\nconst sinMarketing = inventoryParsed.filter(b => b.estadoPublicacion === 'Publicado' && !b.marketingGenerado);\n\n// === METRICAS DE SOPORTE ===\nconst ticketsAbiertos = supportParsed.filter(t => t.estadoTicket === 'Nuevo' || t.estadoTicket === 'En revision');\nconst ticketsPorTema = {};\nsupportParsed.forEach(t => {\n  ticketsPorTema[t.tema] = (ticketsPorTema[t.tema] || 0) + 1;\n});\nconst ticketsUrgentes = supportParsed.filter(t => t.prioridad === 'Urgente' || t.prioridad === 'Alta');\n\n// === ALERTAS ===\nconst alertas = [];\nif (librosSinVender30.length > 0) alertas.push(`${librosSinVender30.length} libros sin vender en mas de 30 dias`);\nif (librosSinVender90.length > 0) alertas.push(`${librosSinVender90.length} libros sin vender en mas de 90 dias - considerar rebaja`);\nif (sinMarketing.length > 0) alertas.push(`${sinMarketing.length} libros publicados sin marketing generado`);\nif (ticketsUrgentes.length > 0) alertas.push(`${ticketsUrgentes.length} tickets de soporte urgentes pendientes`);\n\n// === CONSTRUIR REPORTE ===\nconst reporte = {\n  fecha: formatDate(now),\n  periodo: `Semana del ${formatDate(oneWeekAgo)} al ${formatDate(now)}`,\n  \n  // Ventas\n  ventasSemana: totalVentasSemana.toFixed(2),\n  ventasMes: totalVentasMes.toFixed(2),\n  numPedidosSemana: numPedidosSemana,\n  numLibrosVendidosSemana: numLibrosVendidosSemana,\n  ticketMedio: ticketMedio.toFixed(2),\n  ventasPorPlataforma: Object.entries(ventasPorPlataforma).map(([k, v]) => `${k}: ${v.toFixed(2)} eur`).join(', '),\n  topGeneros: topGeneros.map(([g, n]) => `${g} (${n})`).join(', '),\n  topAutores: topAutores.map(([a, n]) => `${a} (${n})`).join(', '),\n  \n  // Rentabilidad\n  costeTotalVendido: costeTotalVendido.toFixed(2),\n  margenBrutoEur: margenBrutoEur.toFixed(2),\n  margenBrutoPct: margenBrutoPct.toFixed(1),\n  margenPorGenero: Object.entries(margenPorGenero).map(([g, d]) => `${g}: ${d.margen.toFixed(2)} eur`).join(', '),\n  \n  // Inventario\n  stockDisponible: stockDisponible.length,\n  stockReservado: stockReservado.length,\n  stockVendido: stockVendido.length,\n  stockRetirado: stockRetirado.length,\n  valorInventario: valorInventario.toFixed(2),\n  costeInventario: costeInventario.toFixed(2),\n  librosSinVender30: librosSinVender30.length,\n  librosSinVender60: librosSinVender60.length,\n  librosSinVender90: librosSinVender90.length,\n  stockPorGenero: Object.entries(stockPorGenero).map(([g, n]) => `${g}: ${n}`).join(', '),\n  sinMarketing: sinMarketing.length,\n  \n  // Soporte\n  ticketsAbiertos: ticketsAbiertos.length,\n  ticketsPorTema: Object.entries(ticketsPorTema).map(([t, n]) => `${t}: ${n}`).join(', '),\n  ticketsUrgentes: ticketsUrgentes.length,\n  \n  // Alertas\n  alertas: alertas,\n  numAlertas: alertas.length\n};\n\nreturn [{ json: reporte }];"
+      },
+      "id": "compute-metrics",
+      "name": "Calcular Metricas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 200]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "subject": "=Reporte semanal - Segunda Vuelta Libros - {{ $json.fecha }}",
+        "body": {
+          "type": "text",
+          "value": "=REPORTE SEMANAL - SEGUNDA VUELTA LIBROS\nPeriodo: {{ $json.periodo }}\n\n=== VENTAS ===\nVentas de la semana: {{ $json.ventasSemana }} eur\nVentas del mes: {{ $json.ventasMes }} eur\nNumero de pedidos: {{ $json.numPedidosSemana }}\nLibros vendidos: {{ $json.numLibrosVendidosSemana }}\nTicket medio: {{ $json.ticketMedio }} eur\n\nVentas por plataforma:\n  {{ $json.ventasPorPlataforma }}\n\nTop generos vendidos:\n  {{ $json.topGeneros }}\n\nTop autores vendidos:\n  {{ $json.topAutores }}\n\n=== RENTABILIDAD ===\nCoste total de libros vendidos: {{ $json.costeTotalVendido }} eur\nMargen bruto: {{ $json.margenBrutoEur }} eur ({{ $json.margenBrutoPct }}%)\n\nMargen por genero:\n  {{ $json.margenPorGenero }}\n\n=== INVENTARIO ===\nStock disponible: {{ $json.stockDisponible }} libros\nStock reservado: {{ $json.stockReservado }}\nStock vendido: {{ $json.stockVendido }}\nStock retirado: {{ $json.stockRetirado }}\nValor del inventario: {{ $json.valorInventario }} eur\nCoste del inventario: {{ $json.costeInventario }} eur\n\nLibros sin vender +30 dias: {{ $json.librosSinVender30 }}\nLibros sin vender +60 dias: {{ $json.librosSinVender60 }}\nLibros sin vender +90 dias: {{ $json.librosSinVender90 }}\n\nStock por genero:\n  {{ $json.stockPorGenero }}\n\nLibros publicados sin marketing: {{ $json.sinMarketing }}\n\n=== SOPORTE ===\nTickets abiertos: {{ $json.ticketsAbiertos }}\nTickets urgentes: {{ $json.ticketsUrgentes }}\nTickets por tema:\n  {{ $json.ticketsPorTema }}\n\n=== ALERTAS ({{ $json.numAlertas }}) ===\n{{ $json.alertas.join('\\n') }}\n\n---\nReporte generado automaticamente por n8n\nSegunda Vuelta Libros"
+        },
+        "additionalFields": {
+          "to": "kamearcos61@gmail.com"
+        }
+      },
+      "id": "send-email",
+      "name": "Email Reporte",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [720, 200],
+      "notes": "Envia el reporte semanal por email"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetName": "metricas_semanales",
+        "columns": "={{ JSON.stringify({\n  fecha: $json.fecha,\n  periodo: $json.periodo,\n  ventas_semana: $json.ventasSemana,\n  ventas_mes: $json.ventasMes,\n  num_pedidos: $json.numPedidosSemana,\n  libros_vendidos: $json.numLibrosVendidosSemana,\n  ticket_medio: $json.ticketMedio,\n  margen_bruto_eur: $json.margenBrutoEur,\n  margen_pct: $json.margenBrutoPct,\n  stock_disponible: $json.stockDisponible,\n  valor_inventario: $json.valorInventario,\n  coste_inventario: $json.costeInventario,\n  libros_sin_vender_30: $json.librosSinVender30,\n  libros_sin_vender_60: $json.librosSinVender60,\n  libros_sin_vender_90: $json.librosSinVender90,\n  tickets_abiertos: $json.ticketsAbiertos,\n  num_alertas: $json.numAlertas\n}) }}",
+        "options": {}
+      },
+      "id": "write-sheets",
+      "name": "Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [720, 400],
+      "notes": "Anade una fila con las metricas de la semana al Google Sheet. Necesitas crear el sheet y configurar la credencial."
+    }
+  ],
+  "connections": {
+    "Cron Lunes 9AM": {
+      "main": [[{"node": "Inventario", "type": "main", "index": 0}]]
+    },
+    "Inventario": {
+      "main": [[{"node": "Calcular Metricas", "type": "main", "index": 0}]]
+    },
+    "Ventas": {
+      "main": [[{"node": "Calcular Metricas", "type": "main", "index": 0}]]
+    },
+    "Pedidos": {
+      "main": [[{"node": "Calcular Metricas", "type": "main", "index": 0}]]
+    },
+    "Soporte": {
+      "main": [[{"node": "Calcular Metricas", "type": "main", "index": 0}]]
+    },
+    "Calcular Metricas": {
+      "main": [[{"node": "Email Reporte", "type": "main", "index": 0}, {"node": "Google Sheets", "type": "main", "index": 0}]]
+    }
+  },
+  "metadata": {
+    "templateId": "segunda-vuelta-libros-metricas",
+    "name": "Segunda Vuelta Libros - Metricas Semanales",
+    "description": "Cron semanal: consulta todas las bases de Notion, calcula metricas de ventas, rentabilidad, inventario y soporte, envia email y escribe en Google Sheets"
+  }
+}
