@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Nunito_Sans } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/lib/cart-context";
@@ -19,12 +19,15 @@ const nunitoSans = Nunito_Sans({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  themeColor: "#6E8270",
+};
+
 export const metadata: Metadata = {
   title: "Más que libros · Páginas y café | Libros de ocasión y rincón lector",
   description:
     "Librería online de ocasión y rincón de café en Jerez de la Frontera. Libros usados escogidos con mimo, trato cercano por WhatsApp y envíos a toda la península.",
   manifest: "/manifest.json",
-  themeColor: "#6E8270",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

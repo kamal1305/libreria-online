@@ -1,54 +1,55 @@
 "use client";
 
 import {
-  BookHeart,
+  Baby,
+  Backpack,
   BookMarked,
   BookOpen,
   BookText,
   Brain,
-  Castle,
   Compass,
   Feather,
+  Fingerprint,
   Gem,
   Ghost,
   Heart,
-  History,
   Landmark,
-  Laugh,
   LayoutGrid,
-  Microscope,
-  Search,
-  Sparkles,
+  Rocket,
+  Scroll,
+  Smile,
   Trophy,
   Users,
+  Wand2,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 const genreIcons: Record<string, LucideIcon> = {
   Todos: LayoutGrid,
-  "Novela romántica": Heart,
-  Romance: Heart,
-  "Novela negra": Search,
-  "Novela Histórica": Landmark,
-  Fantasía: Sparkles,
-  "Ciencia ficción": Microscope,
-  Historia: History,
-  Clásicos: BookOpen,
-  Infantil: BookHeart,
-  Juvenil: Castle,
-  Ensayo: Brain,
-  "Joyas Literarias": Gem,
-  Poesía: Feather,
-  Pensamiento: Brain,
-  Humor: Laugh,
-  Terror: Ghost,
-  "No ficción": BookMarked,
+  "Novela negra": Fingerprint,
   Novela: BookOpen,
   Narrativa: BookOpen,
+  Romance: Heart,
+  "Novela romántica": Heart,
+  Juvenil: Backpack,
+  Terror: Ghost,
+  Misterio: Ghost,
+  Clásicos: BookMarked,
+  Humor: Smile,
+  Fantasía: Wand2,
+  "Novela histórica": Landmark,
+  "Novela Histórica": Landmark,
+  Historia: Landmark,
+  "No ficción": Scroll,
+  "Ciencia ficción": Rocket,
+  Pensamiento: Brain,
+  Ensayo: Brain,
+  Poesía: Feather,
+  "Joyas Literarias": Gem,
+  Infantil: Baby,
   Biografías: Users,
   Viajes: Compass,
   Cocina: BookText,
-  Misterio: Ghost,
   Deporte: Trophy,
 };
 
@@ -84,13 +85,16 @@ export function CategoryIconNav({
           return (
             <button
               type="button"
-              className={`category-tile${active ? " active" : ""}`}
+              className={`category-tile group${active ? " active" : ""}`}
               key={name}
               onClick={() => handleSelect(name)}
               aria-pressed={active}
             >
               <span className="category-tile-icon">
-                <Icon size={26} strokeWidth={2} />
+                <Icon
+                  className="w-6 h-6 transition-transform duration-200 group-hover:scale-110"
+                  strokeWidth={1.75}
+                />
               </span>
               <strong>{name}</strong>
             </button>
