@@ -90,7 +90,7 @@ export function CategoryIconNav({
               aria-pressed={active}
             >
               <span className="category-tile-icon">
-                <Icon size={24} strokeWidth={1.7} />
+                <Icon size={26} strokeWidth={2} />
               </span>
               <strong>{name}</strong>
             </button>
