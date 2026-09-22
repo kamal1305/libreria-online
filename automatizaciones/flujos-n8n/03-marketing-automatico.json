@@ -16,7 +16,10 @@
       "name": "Cron Diario 9AM",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "notes": "Ejecuta el flujo todos los dias a las 9:00. Puedes cambiar la frecuencia."
     },
     {
@@ -47,7 +50,10 @@
       "name": "Buscar Libros Publicados",
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2,
-      "position": [220, 0],
+      "position": [
+        220,
+        0
+      ],
       "notes": "Busca libros publicados sin marketing generado aun"
     },
     {
@@ -58,19 +64,28 @@
       "name": "Generar Copy",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [440, 0],
+      "position": [
+        440,
+        0
+      ],
       "notes": "Genera 3 borradores por libro: Instagram, Facebook y Newsletter"
     },
     {
       "parameters": {
         "conditions": {
-          "options": {},
+          "options": {
+            "version": 3,
+            "typeValidation": "strict"
+          },
           "combinator": "and",
           "conditions": [
             {
               "leftValue": "={{ $json.noBooks }}",
               "rightValue": true,
-              "type": "org.n8n.n8n.checks.not.type.boolean"
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
             }
           ],
           "filterRenames": []
@@ -80,8 +95,11 @@
       "id": "check-empty",
       "name": "Hay libros?",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [660, 0]
+      "typeVersion": 2.3,
+      "position": [
+        660,
+        0
+      ]
     },
     {
       "parameters": {
@@ -89,26 +107,99 @@
         "operation": "create",
         "databaseId": "6d8b2d0c-f2e6-4740-805a-66b7f8012a9a",
         "properties": {
-          "Titulo": {"title": "={{ $json.bookTitle + ' - ' + $json.channel }}"},
-          "SKU": {"rich_text": [{"text": {"content": "={{ $json.sku }}"}}]},
-          "ISBN": {"rich_text": [{"text": {"content": "={{ $json.isbn }}"}}]},
-          "Libro": {"rich_text": [{"text": {"content": "={{ $json.bookTitle }}"}}]},
-          "Autor": {"rich_text": [{"text": {"content": "={{ $json.bookAuthor }}"}}]},
-          "Canal": {"select": "={{ $json.channel }}"},
-          "Estado": {"select": "={{ $json.estado }}"},
-          "date:Fecha sugerida:start": {"date": {"start": "={{ $json.fechaSugerida }}"}},
-          "Copy corto": {"rich_text": [{"text": {"content": "={{ $json.copyCorto }}"}}]},
-          "Copy largo": {"rich_text": [{"text": {"content": "={{ $json.copyLargo.substring(0, 2000) }}"}}]},
-          "Hashtags": {"rich_text": [{"text": {"content": "={{ $json.hashtags }}"}}]},
-          "URL portada": {"url": "={{ $json.coverUrl }}"},
-          "URL producto": {"url": "={{ $json.webUrl }}"}
+          "Titulo": {
+            "title": "={{ $json.bookTitle + ' - ' + $json.channel }}"
+          },
+          "SKU": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "={{ $json.sku }}"
+                }
+              }
+            ]
+          },
+          "ISBN": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "={{ $json.isbn }}"
+                }
+              }
+            ]
+          },
+          "Libro": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "={{ $json.bookTitle }}"
+                }
+              }
+            ]
+          },
+          "Autor": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "={{ $json.bookAuthor }}"
+                }
+              }
+            ]
+          },
+          "Canal": {
+            "select": "={{ $json.channel }}"
+          },
+          "Estado": {
+            "select": "={{ $json.estado }}"
+          },
+          "date:Fecha sugerida:start": {
+            "date": {
+              "start": "={{ $json.fechaSugerida }}"
+            }
+          },
+          "Copy corto": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "={{ $json.copyCorto }}"
+                }
+              }
+            ]
+          },
+          "Copy largo": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "={{ $json.copyLargo.substring(0, 2000) }}"
+                }
+              }
+            ]
+          },
+          "Hashtags": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "={{ $json.hashtags }}"
+                }
+              }
+            ]
+          },
+          "URL portada": {
+            "url": "={{ $json.coverUrl }}"
+          },
+          "URL producto": {
+            "url": "={{ $json.webUrl }}"
+          }
         }
       },
       "id": "create-marketing-record",
       "name": "Crear Borrador",
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2,
-      "position": [880, -150],
+      "position": [
+        880,
+        -150
+      ],
       "notes": "Crea un borrador de marketing en Notion por cada libro y canal"
     },
     {
@@ -117,15 +208,24 @@
         "operation": "update",
         "pageId": "={{ $json.pageId }}",
         "properties": {
-          "Marketing generado": {"checkbox": true},
-          "date:Fecha marketing:start": {"date": {"start": "={{ new Date().toISOString().split('T')[0] }}"}}
+          "Marketing generado": {
+            "checkbox": true
+          },
+          "date:Fecha marketing:start": {
+            "date": {
+              "start": "={{ new Date().toISOString().split('T')[0] }}"
+            }
+          }
         }
       },
       "id": "mark-marketing-done",
       "name": "Marcar Generado",
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2,
-      "position": [1100, -150],
+      "position": [
+        1100,
+        -150
+      ],
       "notes": "Marca el libro como marketing generado para no duplicar"
     },
     {
@@ -136,7 +236,10 @@
       "name": "Resumen",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1320, -150]
+      "position": [
+        1320,
+        -150
+      ]
     },
     {
       "parameters": {
@@ -154,7 +257,10 @@
       "name": "Notificar Email",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
-      "position": [1540, -150],
+      "position": [
+        1540,
+        -150
+      ],
       "notes": "Email con resumen de borradores generados"
     },
     {
@@ -165,33 +271,96 @@
       "name": "Sin Novedades",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [880, 150]
+      "position": [
+        880,
+        150
+      ]
     }
   ],
   "connections": {
     "Cron Diario 9AM": {
-      "main": [[{"node": "Buscar Libros Publicados", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Buscar Libros Publicados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Buscar Libros Publicados": {
-      "main": [[{"node": "Generar Copy", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Generar Copy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Generar Copy": {
-      "main": [[{"node": "Hay libros?", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Hay libros?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Hay libros?": {
       "main": [
-        [{"node": "Crear Borrador", "type": "main", "index": 0}],
-        [{"node": "Sin Novedades", "type": "main", "index": 0}]
+        [
+          {
+            "node": "Crear Borrador",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sin Novedades",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Crear Borrador": {
-      "main": [[{"node": "Marcar Generado", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Marcar Generado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Marcar Generado": {
-      "main": [[{"node": "Resumen", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Resumen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Resumen": {
-      "main": [[{"node": "Notificar Email", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Notificar Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "metadata": {

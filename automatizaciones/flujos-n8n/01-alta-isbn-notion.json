@@ -7,19 +7,33 @@
       "name": "Manual Trigger",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [0, 0]
+      "position": [
+        0,
+        0
+      ]
     },
     {
       "parameters": {
-        "dataType": "string",
-        "value1": "={{ $json.ISBN || '9788420683146' }}",
-        "value2": ""
+        "assignments": {
+          "assignments": [
+            {
+              "id": "isbn-assignment",
+              "name": "isbn",
+              "value": "9788497592208",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
       },
       "id": "isbn-input",
       "name": "ISBN Input",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.3,
-      "position": [220, 0],
+      "position": [
+        220,
+        0
+      ],
       "notes": "Introduce el ISBN del libro. Por defecto usa uno de prueba."
     },
     {
@@ -30,7 +44,7 @@
           "parameters": [
             {
               "name": "isbn",
-              "value": "={{ $json.value1 }}"
+              "value": "={{ $json.isbn }}"
             }
           ]
         },
@@ -40,7 +54,10 @@
       "name": "Open Library Search",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [440, 0],
+      "position": [
+        440,
+        0
+      ],
       "notes": "Busca el libro por ISBN en Open Library"
     },
     {
@@ -49,25 +66,32 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "loose"
+            "typeValidation": "strict",
+            "version": 3
           },
-          "combinator": "and",
           "conditions": [
             {
+              "id": "cond-num-found",
               "leftValue": "={{ $json.numFound }}",
               "rightValue": 0,
-              "type": "org.n8n.n8n.checks.not.type.number.greater"
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
             }
           ],
-          "filterRenames": []
+          "combinator": "and"
         },
         "options": {}
       },
       "id": "check-found",
       "name": "Libro encontrado?",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [660, 0]
+      "typeVersion": 2.3,
+      "position": [
+        660,
+        0
+      ]
     },
     {
       "parameters": {
@@ -78,7 +102,10 @@
       "name": "Open Library Works",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [880, -100],
+      "position": [
+        880,
+        -100
+      ],
       "notes": "Obtiene detalles del libro (descripcion, sujetos)"
     },
     {
@@ -89,51 +116,72 @@
       "name": "Normalizar Datos",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1100, -100]
+      "position": [
+        1100,
+        -100
+      ]
     },
     {
       "parameters": {
         "resource": "databasePage",
-        "operation": "create",
-        "databaseId": "382e26a3-8bcc-4c1c-9bb5-65b020ebbe27",
-        "properties": {
-          "Nombre": {
-            "title": "={{ $json.title }}"
-          },
-          "ISBN": {
-            "rich_text": [{"text": {"content": "={{ $json.isbn }}"}}]
-          },
-          "Autor": {
-            "rich_text": [{"text": {"content": "={{ $json.author }}"}}]
-          },
-          "Año": {
-            "number": "={{ $json.year }}"
-          },
-          "Género": {
-            "select": "={{ $json.genre }}"
-          },
-          "Estado físico": {
-            "select": "Bueno"
-          },
-          "Estado publicación": {
-            "select": "Pendiente"
-          },
-          "Portada": {
-            "url": "={{ $json.coverUrl }}"
-          },
-          "Sinopsis": {
-            "rich_text": [{"text": {"content": "={{ $json.description.substring(0, 2000) }}"}}]
-          },
-          "Fecha entrada": {
-            "date": {"start": "={{ $json.fechaEntrada }}"}
-          }
-        }
+        "databaseId": {
+          "__rl": true,
+          "value": "3e358b98-802d-8034-8058-f75a48890b65",
+          "mode": "list",
+          "cachedResultName": "Inventario - Más que libros",
+          "cachedResultUrl": "https://app.notion.com/p/3e358b98802d80348058f75a48890b65"
+        },
+        "title": "={{ $json.title }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "ISBN|rich_text",
+              "richTextValue": "={{ $json.isbn }}"
+            },
+            {
+              "key": "Autor|rich_text",
+              "richTextValue": "={{ $json.author }}"
+            },
+            {
+              "key": "Año|number",
+              "numberValue": "={{ $json.year }}"
+            },
+            {
+              "key": "Género|select",
+              "selectValue": "={{ $json.genre }}"
+            },
+            {
+              "key": "Estado físico|select",
+              "selectValue": "Bueno"
+            },
+            {
+              "key": "Estado publicación|select",
+              "selectValue": "Pendiente"
+            },
+            {
+              "key": "Portada|url",
+              "urlValue": "={{ $json.coverUrl }}"
+            },
+            {
+              "key": "Sinopsis|rich_text",
+              "richTextValue": "={{ $json.description ? $json.description.substring(0, 2000) : \"\" }}"
+            },
+            {
+              "key": "Fecha entrada|date",
+              "date": "={{ $json.fechaEntrada }}"
+            }
+          ]
+        },
+        "options": {}
       },
       "id": "notion-create",
       "name": "Crear en Notion",
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2,
-      "position": [1320, -100],
+      "position": [
+        1320,
+        -100
+      ],
       "notes": "Crea la ficha del libro en la base de datos de Notion. Configura tus credenciales de Notion en n8n."
     },
     {
@@ -144,7 +192,10 @@
       "name": "Respuesta",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1540, -100]
+      "position": [
+        1540,
+        -100
+      ]
     },
     {
       "parameters": {
@@ -154,33 +205,96 @@
       "name": "No Encontrado",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [880, 100]
+      "position": [
+        880,
+        100
+      ]
     }
   ],
   "connections": {
     "Manual Trigger": {
-      "main": [[{"node": "ISBN Input", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "ISBN Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "ISBN Input": {
-      "main": [[{"node": "Open Library Search", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Open Library Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Open Library Search": {
-      "main": [[{"node": "Libro encontrado?", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Libro encontrado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Libro encontrado?": {
       "main": [
-        [{"node": "Open Library Works", "type": "main", "index": 0}],
-        [{"node": "No Encontrado", "type": "main", "index": 0}]
+        [
+          {
+            "node": "Open Library Works",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Encontrado",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Open Library Works": {
-      "main": [[{"node": "Normalizar Datos", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Normalizar Datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Normalizar Datos": {
-      "main": [[{"node": "Crear en Notion", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Crear en Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Crear en Notion": {
-      "main": [[{"node": "Respuesta", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "metadata": {

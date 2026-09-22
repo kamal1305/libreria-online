@@ -7,7 +7,9 @@
           "interval": [
             {
               "field": "weeks",
-              "triggerAtDay": [1],
+              "triggerAtDay": [
+                1
+              ],
               "triggerAtHour": 10
             }
           ]
@@ -17,7 +19,10 @@
       "name": "Cron Lunes 10AM",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "notes": "Ejecuta cada lunes a las 10:00 (despues del reporte de metricas)"
     },
     {
@@ -31,7 +36,10 @@
       "name": "Inventario",
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2,
-      "position": [220, 0]
+      "position": [
+        220,
+        0
+      ]
     },
     {
       "parameters": {
@@ -44,7 +52,10 @@
       "name": "Ventas",
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2,
-      "position": [220, 200]
+      "position": [
+        220,
+        200
+      ]
     },
     {
       "parameters": {
@@ -54,18 +65,27 @@
       "name": "Calcular Recomendaciones",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [480, 0]
+      "position": [
+        480,
+        0
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": {},
+          "options": {
+            "version": 3,
+            "typeValidation": "strict"
+          },
           "combinator": "and",
           "conditions": [
             {
               "leftValue": "={{ $json.noRecomendaciones }}",
               "rightValue": true,
-              "type": "org.n8n.n8n.checks.not.type.boolean"
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
             }
           ],
           "filterRenames": []
@@ -75,8 +95,11 @@
       "id": "check-empty",
       "name": "Hay recomendaciones?",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [700, 0]
+      "typeVersion": 2.3,
+      "position": [
+        700,
+        0
+      ]
     },
     {
       "parameters": {
@@ -84,26 +107,81 @@
         "operation": "create",
         "databaseId": "IA_DECISIONES_DATABASE_ID",
         "properties": {
-          "Titulo": {"title": "={{ $json.titulo }}"},
-          "Tipo recomendacion": {"select": "={{ $json.tipo }}"},
-          "SKU": {"rich_text": [{"text": {"content": "={{ $json.sku }}"}}]},
-          "Libro": {"rich_text": [{"text": {"content": "={{ $json.libro }}"}}]},
-          "Autor": {"rich_text": [{"text": {"content": "={{ $json.autor }}"}}]},
-          "Genero": {"select": "={{ $json.genero }}"},
-          "Precio actual": {"number": "={{ $json.precioActual }}"},
-          "Precio sugerido": {"number": "={{ $json.precioSugerido }}"},
-          "Motivo": {"rich_text": [{"text": {"content": "={{ $json.motivo }}"}}]},
-          "Confianza": {"select": "={{ $json.confianza }}"},
-          "Accion sugerida": {"select": "={{ $json.accion }}"},
-          "Estado": {"select": "={{ $json.estado }}"},
-          "date:Fecha:start": {"date": {"start": "={{ $json.fecha }}"}}
+          "Titulo": {
+            "title": "={{ $json.titulo }}"
+          },
+          "Tipo recomendacion": {
+            "select": "={{ $json.tipo }}"
+          },
+          "SKU": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "={{ $json.sku }}"
+                }
+              }
+            ]
+          },
+          "Libro": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "={{ $json.libro }}"
+                }
+              }
+            ]
+          },
+          "Autor": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "={{ $json.autor }}"
+                }
+              }
+            ]
+          },
+          "Genero": {
+            "select": "={{ $json.genero }}"
+          },
+          "Precio actual": {
+            "number": "={{ $json.precioActual }}"
+          },
+          "Precio sugerido": {
+            "number": "={{ $json.precioSugerido }}"
+          },
+          "Motivo": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "={{ $json.motivo }}"
+                }
+              }
+            ]
+          },
+          "Confianza": {
+            "select": "={{ $json.confianza }}"
+          },
+          "Accion sugerida": {
+            "select": "={{ $json.accion }}"
+          },
+          "Estado": {
+            "select": "={{ $json.estado }}"
+          },
+          "date:Fecha:start": {
+            "date": {
+              "start": "={{ $json.fecha }}"
+            }
+          }
         }
       },
       "id": "create-decision",
       "name": "Crear Recomendacion",
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2,
-      "position": [920, -150],
+      "position": [
+        920,
+        -150
+      ],
       "notes": "IMPORTANTE: Reemplaza IA_DECISIONES_DATABASE_ID con el ID de tu base 'IA Decisiones' en Notion"
     },
     {
@@ -114,7 +192,10 @@
       "name": "Resumen",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1140, -150]
+      "position": [
+        1140,
+        -150
+      ]
     },
     {
       "parameters": {
@@ -132,7 +213,10 @@
       "name": "Email Recomendaciones",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
-      "position": [1360, -150]
+      "position": [
+        1360,
+        -150
+      ]
     },
     {
       "parameters": {
@@ -142,33 +226,96 @@
       "name": "Sin Recomendaciones",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [920, 150]
+      "position": [
+        920,
+        150
+      ]
     }
   ],
   "connections": {
     "Cron Lunes 10AM": {
-      "main": [[{"node": "Inventario", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Inventario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Inventario": {
-      "main": [[{"node": "Calcular Recomendaciones", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Calcular Recomendaciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Ventas": {
-      "main": [[{"node": "Calcular Recomendaciones", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Calcular Recomendaciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Calcular Recomendaciones": {
-      "main": [[{"node": "Hay recomendaciones?", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Hay recomendaciones?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Hay recomendaciones?": {
       "main": [
-        [{"node": "Crear Recomendacion", "type": "main", "index": 0}],
-        [{"node": "Sin Recomendaciones", "type": "main", "index": 0}]
+        [
+          {
+            "node": "Crear Recomendacion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sin Recomendaciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Crear Recomendacion": {
-      "main": [[{"node": "Resumen", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Resumen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Resumen": {
-      "main": [[{"node": "Email Recomendaciones", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Email Recomendaciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "metadata": {

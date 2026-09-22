@@ -12,7 +12,10 @@
       "name": "Webhook Pedido",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "webhookId": "pedido-recibido",
       "notes": "Recibe el pedido desde tu tienda online"
     },
@@ -24,7 +27,10 @@
       "name": "Procesar Pedido",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [220, 0]
+      "position": [
+        220,
+        0
+      ]
     },
     {
       "parameters": {
@@ -35,7 +41,10 @@
       "name": "Iterar Items",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
-      "position": [440, 0]
+      "position": [
+        440,
+        0
+      ]
     },
     {
       "parameters": {
@@ -59,7 +68,10 @@
       "name": "Buscar Libro",
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2,
-      "position": [660, 0],
+      "position": [
+        660,
+        0
+      ],
       "notes": "Busca el libro por SKU en el inventario de Notion"
     },
     {
@@ -70,18 +82,27 @@
       "name": "Verificar Disponibilidad",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [880, 0]
+      "position": [
+        880,
+        0
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": {},
+          "options": {
+            "version": 3,
+            "typeValidation": "strict"
+          },
           "combinator": "and",
           "conditions": [
             {
               "leftValue": "={{ $json.action }}",
               "rightValue": "reservar",
-              "type": "org.n8n.n8n.checks.not.type.string.equals"
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
           ],
           "filterRenames": []
@@ -91,8 +112,11 @@
       "id": "should-reserve",
       "name": "Reservar?",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [1100, 0]
+      "typeVersion": 2.3,
+      "position": [
+        1100,
+        0
+      ]
     },
     {
       "parameters": {
@@ -109,7 +133,10 @@
       "name": "Marcar Reservado",
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2,
-      "position": [1320, -150]
+      "position": [
+        1320,
+        -150
+      ]
     },
     {
       "parameters": {
@@ -119,7 +146,10 @@
       "name": "Tras Reservar",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1540, -150]
+      "position": [
+        1540,
+        -150
+      ]
     },
     {
       "parameters": {
@@ -129,7 +159,10 @@
       "name": "Tras Incidencia",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1320, 150]
+      "position": [
+        1320,
+        150
+      ]
     },
     {
       "parameters": {},
@@ -137,7 +170,10 @@
       "name": "Volver al Loop",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [1760, 0],
+      "position": [
+        1760,
+        0
+      ],
       "notes": "Reconecta al nodo Iterar Items para procesar el siguiente libro"
     },
     {
@@ -148,7 +184,10 @@
       "name": "Finalizar Pedido",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1980, 0]
+      "position": [
+        1980,
+        0
+      ]
     },
     {
       "parameters": {
@@ -156,23 +195,78 @@
         "operation": "create",
         "databaseId": "3eab2f92-894c-4440-9a95-537bc69ed910",
         "properties": {
-          "Nº Pedido": {"title": "={{ $json.orderId }}"},
-          "Cliente": {"rich_text": [{"text": {"content": "={{ $json.customerName }}"}}]},
-          "Email": {"rich_text": [{"text": {"content": "={{ $json.customerEmail }}"}}]},
-          "date:Fecha:start": {"date": {"start": "={{ $json.fecha }}"}},
-          "Estado pedido": {"select": "={{ $json.orderStatus }}"},
-          "Importe total": {"number": "={{ $json.total }}"},
-          "Plataforma": {"select": "={{ $json.platform }}"},
-          "Dirección envío": {"rich_text": [{"text": {"content": "={{ $json.shippingAddress }}"}}]},
-          "Artículos": {"rich_text": [{"text": {"content": "={{ $json.itemsSummary }}"}}]},
-          "Notas": {"rich_text": [{"text": {"content": "={{ $json.hasIncidence ? $json.incidenceDetails.join('; ') : 'Pedido procesado automaticamente' }}"}}]}
+          "Nº Pedido": {
+            "title": "={{ $json.orderId }}"
+          },
+          "Cliente": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "={{ $json.customerName }}"
+                }
+              }
+            ]
+          },
+          "Email": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "={{ $json.customerEmail }}"
+                }
+              }
+            ]
+          },
+          "date:Fecha:start": {
+            "date": {
+              "start": "={{ $json.fecha }}"
+            }
+          },
+          "Estado pedido": {
+            "select": "={{ $json.orderStatus }}"
+          },
+          "Importe total": {
+            "number": "={{ $json.total }}"
+          },
+          "Plataforma": {
+            "select": "={{ $json.platform }}"
+          },
+          "Dirección envío": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "={{ $json.shippingAddress }}"
+                }
+              }
+            ]
+          },
+          "Artículos": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "={{ $json.itemsSummary }}"
+                }
+              }
+            ]
+          },
+          "Notas": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "={{ $json.hasIncidence ? $json.incidenceDetails.join('; ') : 'Pedido procesado automaticamente' }}"
+                }
+              }
+            ]
+          }
         }
       },
       "id": "create-order-record",
       "name": "Crear Registro",
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2,
-      "position": [2200, 0],
+      "position": [
+        2200,
+        0
+      ],
       "notes": "Crea el registro del pedido en la base de datos de Pedidos de Notion"
     },
     {
@@ -191,7 +285,10 @@
       "name": "Notificar Email",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
-      "position": [2420, 0],
+      "position": [
+        2420,
+        0
+      ],
       "notes": "Notificacion interna a tu email"
     },
     {
@@ -204,54 +301,169 @@
       "name": "Responder",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [2640, 0]
+      "position": [
+        2640,
+        0
+      ]
     }
   ],
   "connections": {
     "Webhook Pedido": {
-      "main": [[{"node": "Procesar Pedido", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Procesar Pedido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Procesar Pedido": {
-      "main": [[{"node": "Iterar Items", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Iterar Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Iterar Items": {
       "main": [
-        [{"node": "Buscar Libro", "type": "main", "index": 0}],
-        [{"node": "Finalizar Pedido", "type": "main", "index": 0}]
+        [
+          {
+            "node": "Buscar Libro",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Finalizar Pedido",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Buscar Libro": {
-      "main": [[{"node": "Verificar Disponibilidad", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Verificar Disponibilidad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Verificar Disponibilidad": {
-      "main": [[{"node": "Reservar?", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Reservar?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Reservar?": {
       "main": [
-        [{"node": "Marcar Reservado", "type": "main", "index": 0}],
-        [{"node": "Tras Incidencia", "type": "main", "index": 0}]
+        [
+          {
+            "node": "Marcar Reservado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Tras Incidencia",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Marcar Reservado": {
-      "main": [[{"node": "Tras Reservar", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Tras Reservar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Tras Reservar": {
-      "main": [[{"node": "Volver al Loop", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Volver al Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Tras Incidencia": {
-      "main": [[{"node": "Volver al Loop", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Volver al Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Volver al Loop": {
-      "main": [[{"node": "Iterar Items", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Iterar Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Finalizar Pedido": {
-      "main": [[{"node": "Crear Registro", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Crear Registro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Crear Registro": {
-      "main": [[{"node": "Notificar Email", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Notificar Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Notificar Email": {
-      "main": [[{"node": "Responder", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "metadata": {

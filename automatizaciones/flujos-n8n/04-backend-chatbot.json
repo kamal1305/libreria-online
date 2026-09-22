@@ -12,7 +12,10 @@
       "name": "Webhook Soporte",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "webhookId": "soporte-chatbot",
       "notes": "Recibe consultas del chatbot de Voiceflow"
     },
@@ -24,18 +27,27 @@
       "name": "Procesar Consulta",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [220, 0]
+      "position": [
+        220,
+        0
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": {},
+          "options": {
+            "version": 3,
+            "typeValidation": "strict"
+          },
           "combinator": "and",
           "conditions": [
             {
               "leftValue": "={{ $json.intent }}",
               "rightValue": "order_status",
-              "type": "org.n8n.n8n.checks.not.type.string.equals"
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
           ],
           "filterRenames": []
@@ -45,24 +57,36 @@
       "id": "check-intent",
       "name": "Tipo Consulta",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [440, 0]
+      "typeVersion": 2.3,
+      "position": [
+        440,
+        0
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": {},
+          "options": {
+            "version": 3,
+            "typeValidation": "strict"
+          },
           "combinator": "and",
           "conditions": [
             {
               "leftValue": "={{ $json.orderId }}",
               "rightValue": "",
-              "type": "org.n8n.n8n.checks.not.type.string.equals"
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             },
             {
               "leftValue": "={{ $json.customerEmail }}",
               "rightValue": "",
-              "type": "org.n8n.n8n.checks.not.type.string.equals"
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
           ],
           "filterRenames": []
@@ -72,8 +96,11 @@
       "id": "check-order-data",
       "name": "Tiene datos?",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [660, -200]
+      "typeVersion": 2.3,
+      "position": [
+        660,
+        -200
+      ]
     },
     {
       "parameters": {
@@ -103,7 +130,10 @@
       "name": "Buscar Pedido",
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2,
-      "position": [880, -300],
+      "position": [
+        880,
+        -300
+      ],
       "notes": "Busca el pedido por numero Y email (privacidad)"
     },
     {
@@ -114,7 +144,10 @@
       "name": "Respuesta Pedido",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1100, -300]
+      "position": [
+        1100,
+        -300
+      ]
     },
     {
       "parameters": {
@@ -124,7 +157,10 @@
       "name": "Pedir Datos",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [880, -100]
+      "position": [
+        880,
+        -100
+      ]
     },
     {
       "parameters": {
@@ -148,7 +184,10 @@
       "name": "Buscar FAQ",
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2,
-      "position": [660, 100],
+      "position": [
+        660,
+        100
+      ],
       "notes": "Obtiene todas las FAQ publicadas"
     },
     {
@@ -159,18 +198,27 @@
       "name": "Emparejar FAQ",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [880, 100]
+      "position": [
+        880,
+        100
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": {},
+          "options": {
+            "version": 3,
+            "typeValidation": "strict"
+          },
           "combinator": "and",
           "conditions": [
             {
               "leftValue": "={{ $json.needsEscalation }}",
               "rightValue": true,
-              "type": "org.n8n.n8n.checks.not.type.boolean"
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
             }
           ],
           "filterRenames": []
@@ -180,8 +228,11 @@
       "id": "check-escalation",
       "name": "Escalar?",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [1100, 100]
+      "typeVersion": 2.3,
+      "position": [
+        1100,
+        100
+      ]
     },
     {
       "parameters": {
@@ -189,23 +240,72 @@
         "operation": "create",
         "databaseId": "81f36a12-0882-4404-8a57-568b8be42b24",
         "properties": {
-          "Asunto": {"title": "=Consulta chatbot - {{ $('Procesar Consulta').first().json.query }}"},
-          "Cliente": {"rich_text": [{"text": {"content": "={{ $('Procesar Consulta').first().json.customerName }}"}}]},
-          "Email": {"rich_text": [{"text": {"content": "={{ $('Procesar Consulta').first().json.customerEmail }}"}}]},
-          "Canal": {"select": "={{ $('Procesar Consulta').first().json.channel }}"},
-          "Tema": {"select": "Otro"},
-          "Prioridad": {"select": "Media"},
-          "Estado ticket": {"select": "Nuevo"},
-          "Mensaje cliente": {"rich_text": [{"text": {"content": "={{ $('Procesar Consulta').first().json.query }}"}}]},
-          "Resumen": {"rich_text": [{"text": {"content": "=Escala desde chatbot. FAQ no encontro respuesta o requiere atencion humana."}}]},
-          "date:Fecha:start": {"date": {"start": "={{ new Date().toISOString().split('T')[0] }}"}}
+          "Asunto": {
+            "title": "=Consulta chatbot - {{ $('Procesar Consulta').first().json.query }}"
+          },
+          "Cliente": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "={{ $('Procesar Consulta').first().json.customerName }}"
+                }
+              }
+            ]
+          },
+          "Email": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "={{ $('Procesar Consulta').first().json.customerEmail }}"
+                }
+              }
+            ]
+          },
+          "Canal": {
+            "select": "={{ $('Procesar Consulta').first().json.channel }}"
+          },
+          "Tema": {
+            "select": "Otro"
+          },
+          "Prioridad": {
+            "select": "Media"
+          },
+          "Estado ticket": {
+            "select": "Nuevo"
+          },
+          "Mensaje cliente": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "={{ $('Procesar Consulta').first().json.query }}"
+                }
+              }
+            ]
+          },
+          "Resumen": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "=Escala desde chatbot. FAQ no encontro respuesta o requiere atencion humana."
+                }
+              }
+            ]
+          },
+          "date:Fecha:start": {
+            "date": {
+              "start": "={{ new Date().toISOString().split('T')[0] }}"
+            }
+          }
         }
       },
       "id": "create-ticket",
       "name": "Crear Ticket",
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2,
-      "position": [1320, 200],
+      "position": [
+        1320,
+        200
+      ],
       "notes": "Crea un ticket de soporte en Notion cuando se escala a humano"
     },
     {
@@ -224,7 +324,10 @@
       "name": "Notificar Escalado",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
-      "position": [1540, 200],
+      "position": [
+        1540,
+        200
+      ],
       "notes": "Te avisa cuando una consulta se escala a humano"
     },
     {
@@ -235,7 +338,10 @@
       "name": "Mensaje Escalado",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1760, 200]
+      "position": [
+        1760,
+        200
+      ]
     },
     {
       "parameters": {
@@ -247,57 +353,176 @@
       "name": "Responder",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [1980, 100]
+      "position": [
+        1980,
+        100
+      ]
     }
   ],
   "connections": {
     "Webhook Soporte": {
-      "main": [[{"node": "Procesar Consulta", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Procesar Consulta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Procesar Consulta": {
-      "main": [[{"node": "Tipo Consulta", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Tipo Consulta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Tipo Consulta": {
       "main": [
-        [{"node": "Tiene datos?", "type": "main", "index": 0}],
-        [{"node": "Buscar FAQ", "type": "main", "index": 0}]
+        [
+          {
+            "node": "Tiene datos?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Buscar FAQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Tiene datos?": {
       "main": [
-        [{"node": "Buscar Pedido", "type": "main", "index": 0}],
-        [{"node": "Pedir Datos", "type": "main", "index": 0}]
+        [
+          {
+            "node": "Buscar Pedido",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Pedir Datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Buscar Pedido": {
-      "main": [[{"node": "Respuesta Pedido", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Respuesta Pedido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Respuesta Pedido": {
-      "main": [[{"node": "Responder", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Pedir Datos": {
-      "main": [[{"node": "Responder", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Buscar FAQ": {
-      "main": [[{"node": "Emparejar FAQ", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Emparejar FAQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Emparejar FAQ": {
-      "main": [[{"node": "Escalar?", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Escalar?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Escalar?": {
       "main": [
-        [{"node": "Responder", "type": "main", "index": 0}],
-        [{"node": "Crear Ticket", "type": "main", "index": 0}]
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Crear Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Crear Ticket": {
-      "main": [[{"node": "Notificar Escalado", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Notificar Escalado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Notificar Escalado": {
-      "main": [[{"node": "Mensaje Escalado", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Mensaje Escalado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Mensaje Escalado": {
-      "main": [[{"node": "Responder", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "metadata": {
