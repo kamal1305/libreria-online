@@ -22,35 +22,33 @@ const whatsappUrl =
 type HeaderProps = {
   query: string;
   onQueryChange: (v: string) => void;
-  menuOpen: boolean;
-  onMenuToggle: () => void;
+  menuOpen?: boolean;
+  onMenuToggle?: () => void;
 };
 
 export function Header({
   query,
   onQueryChange,
-  menuOpen,
-  onMenuToggle,
 }: HeaderProps) {
   const { items, toggleCart, cartOpen } = useCart();
   const cartCount = items.length;
 
   return (
     <header className="site-header">
-      {/* 1. BANNER SUPERIOR DE AVISOS */}
+      {/* 1. BANNER SUPERIOR DE AVISOS COMPACTO */}
       <div className="top-banner" role="region" aria-label="Avisos destacados">
         <div className="top-banner-inner">
           <span className="inline-flex items-center gap-1.5">
             ✨ <strong className="font-bold">ENVÍO GRATIS</strong> A PARTIR DE 30 €
           </span>
-          <span className="banner-dot hidden sm:inline">·</span>
+          <span className="banner-dot">·</span>
           <span className="inline-flex items-center gap-1.5">
-            PUNTO DE RECOGIDA EN JEREZ:{" "}
+            RECOGIDA EN JEREZ:{" "}
             <span className="banner-pill-free">GRATIS</span>
           </span>
-          <span className="banner-dot hidden md:inline">·</span>
-          <span className="hidden md:inline-flex items-center gap-1.5">
-            ATENCIÓN DIRECTA POR WHATSAPP:{" "}
+          <span className="banner-dot hidden sm:inline">·</span>
+          <span className="hidden sm:inline-flex items-center gap-1.5">
+            WHATSAPP:{" "}
             <a
               href={whatsappUrl}
               target="_blank"
@@ -66,21 +64,6 @@ export function Header({
 
       {/* Main row */}
       <div className="header-inner">
-        <button
-          className="lg:hidden"
-          aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
-          onClick={onMenuToggle}
-          style={{
-            background: "none",
-            border: 0,
-            color: "var(--charcoal-soft)",
-            cursor: "pointer",
-            display: "flex",
-            padding: "4px",
-          }}
-        >
-          {menuOpen ? <X size={26} /> : <Menu size={26} />}
-        </button>
 
         {/* 2. LOGOTIPO Y MARCA AMPLIADOS */}
         <Link href="/" className="brand-lockup" aria-label="Más que libros, inicio">
@@ -159,15 +142,15 @@ export function Header({
       </div>
 
       {/* 4. BARRA DE APARTADOS (NAVBAR INFERIOR VERDE AGUA / MENTA PASTEL) */}
-      <nav className={`nav-bar ${menuOpen ? "nav-open" : ""}`}>
-        <div className={`nav-inner ${menuOpen ? "flex" : "hidden lg:flex"}`}>
+      <nav className="nav-bar">
+        <div className="nav-inner">
           {navItems.map((item) =>
             item.isPage ? (
-              <Link href={item.href} key={item.label} onClick={onMenuToggle}>
+              <Link href={item.href} key={item.label}>
                 {item.label}
               </Link>
             ) : (
-              <a href={item.href} key={item.label} onClick={onMenuToggle}>
+              <a href={item.href} key={item.label}>
                 {item.label}
               </a>
             )

@@ -3,13 +3,13 @@
   "nodes": [
     {
       "parameters": {},
-      "id": "manual-trigger",
+      "id": "8ba0b905-6505-4517-b00c-b71088454e5e",
       "name": "Manual Trigger",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -880,
-        112
+        -1040,
+        16
       ]
     },
     {
@@ -19,20 +19,20 @@
             {
               "id": "isbn-assignment",
               "name": "isbn",
-              "value": "9788410496293",
+              "value": "9788419834232",
               "type": "string"
             }
           ]
         },
         "options": {}
       },
-      "id": "isbn-input",
+      "id": "ba23c7a8-7a52-4208-ac14-2c2122b52dd4",
       "name": "ISBN Input1",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.3,
       "position": [
-        -640,
-        112
+        -800,
+        16
       ],
       "notes": "Introduce el ISBN del libro a escanear/buscar."
     },
@@ -50,13 +50,13 @@
         },
         "options": {}
       },
-      "id": "openlibrary-search",
+      "id": "cd35a943-f7e7-4693-936d-080c4c8b586f",
       "name": "Open Library Search",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -400,
-        0
+        -560,
+        -112
       ],
       "notes": "Busca primero en Open Library (gratis y sin clave)"
     },
@@ -84,13 +84,13 @@
         },
         "options": {}
       },
-      "id": "check-openlibrary-found",
+      "id": "f96110b1-3f53-444d-8e6c-47fee801709e",
       "name": "If Open Library",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -160,
-        0
+        -320,
+        -112
       ]
     },
     {
@@ -98,27 +98,27 @@
         "url": "={{ 'https://openlibrary.org' + $json.docs[0].key + '.json' }}",
         "options": {}
       },
-      "id": "openlibrary-works",
+      "id": "7e8df0b8-924d-4b58-973d-a56813ab147c",
       "name": "Open Library Works",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        80,
-        -100
+        -80,
+        -208
       ],
       "notes": "Obtiene detalles del libro en Open Library"
     },
     {
       "parameters": {
-        "jsCode": "// Obtenemos los datos de Open Library Search de forma segura\nlet searchDoc = {};\ntry {\n  searchDoc = $('Open Library Search').first().json.docs[0] || {};\n} catch (e) {\n  searchDoc = {};\n}\n\n// Obtenemos el ISBN\nlet isbn = '';\ntry {\n  const input = $('ISBN Input1').first().json;\n  isbn = input.isbn || input.valuel || input.value1 || '9788410496293';\n} catch (e) {\n  isbn = '9788410496293';\n}\n\nconst workData = $json || {};\n\nconst coverId = searchDoc.cover_i;\nconst coverUrl = coverId \n  ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` \n  : `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`;\n\nlet description = 'Sin descripción disponible.';\nif (workData.description) {\n  if (typeof workData.description === 'object') {\n    description = workData.description.value || description;\n  } else {\n    description = workData.description;\n  }\n}\n\nconst author = (searchDoc.author_name && searchDoc.author_name.length > 0) \n  ? searchDoc.author_name[0] \n  : 'Autor desconocido';\n\nconst year = searchDoc.first_publish_year || new Date().getFullYear();\nconst subjects = (workData.subjects || []).slice(0, 5).map(s => s.name || s);\n\nfunction mapGenre(subjects) {\n  const genreMap = {\n    'thriller': 'Novela negra',\n    'mystery': 'Novela negra',\n    'fantasy': 'Fantasía',\n    'horror': 'Terror',\n    'science': 'Ciencia ficción',\n    'children': 'Infantil',\n    'romance': 'Romance',\n    'history': 'Historia',\n    'biography': 'Biografía',\n    'poetry': 'Poesía',\n    'drama': 'Teatro',\n    'fiction': 'Novela'\n  };\n  for (const subject of subjects) {\n    const lower = String(subject).toLowerCase();\n    for (const [key, value] of Object.entries(genreMap)) {\n      if (lower.includes(key)) return value;\n    }\n  }\n  return 'Novela';\n}\n\nconst genre = mapGenre(subjects);\n\nreturn {\n  isbn: String(isbn),\n  title: searchDoc.title || 'Título desconocido',\n  author: author,\n  year: Number(year) || 2024,\n  genre: genre,\n  coverUrl: coverUrl,\n  description: String(description).substring(0, 2000),\n  fechaEntrada: new Date().toISOString().split('T')[0]\n};"
+        "jsCode": "// Obtenemos los datos de Open Library Search de forma segura\nlet searchDoc = {};\ntry {\n  searchDoc = $('Open Library Search').first().json.docs[0] || {};\n} catch (e) {\n  searchDoc = {};\n}\n\n// Obtenemos el ISBN\nlet isbn = '';\ntry {\n  const input = $('ISBN Input1').first().json;\n  isbn = input.isbn || input.valuel || input.value1 || '9788419834232';\n} catch (e) {\n  isbn = '9788419834232';\n}\n\nconst workData = $json || {};\n\nconst coverId = searchDoc.cover_i;\nconst coverUrl = coverId \n  ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` \n  : `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`;\n\nlet description = 'Sin descripción disponible.';\nif (workData.description) {\n  if (typeof workData.description === 'object') {\n    description = workData.description.value || description;\n  } else {\n    description = workData.description;\n  }\n}\n\nconst author = (searchDoc.author_name && searchDoc.author_name.length > 0) \n  ? searchDoc.author_name[0] \n  : 'Autor desconocido';\n\nconst year = searchDoc.first_publish_year || new Date().getFullYear();\nconst subjects = (workData.subjects || []).slice(0, 5).map(s => s.name || s);\n\nfunction mapGenre(subjects) {\n  const genreMap = {\n    'thriller': 'Novela negra',\n    'mystery': 'Novela negra',\n    'fantasy': 'Fantasía',\n    'horror': 'Terror',\n    'science': 'Ciencia ficción',\n    'children': 'Infantil',\n    'romance': 'Romance',\n    'history': 'Historia',\n    'biography': 'Biografía',\n    'poetry': 'Poesía',\n    'drama': 'Teatro',\n    'fiction': 'Novela'\n  };\n  for (const subject of subjects) {\n    const lower = String(subject).toLowerCase();\n    for (const [key, value] of Object.entries(genreMap)) {\n      if (lower.includes(key)) return value;\n    }\n  }\n  return 'Novela';\n}\n\nconst genre = mapGenre(subjects);\n\nreturn {\n  isbn: String(isbn),\n  title: searchDoc.title || 'Título desconocido',\n  author: author,\n  year: Number(year) || 2024,\n  genre: genre,\n  coverUrl: coverUrl,\n  description: String(description).substring(0, 2000),\n  fechaEntrada: new Date().toISOString().split('T')[0]\n};"
       },
-      "id": "normalize-openlibrary",
+      "id": "cb5ee23b-8124-4309-bc40-b696f6fb0838",
       "name": "Normalizar Datos",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        320,
-        -100
+        160,
+        -208
       ]
     },
     {
@@ -129,7 +129,7 @@
           "parameters": [
             {
               "name": "q",
-              "value": "=isbn:{{ $('ISBN Input1').first().json.isbn }}"
+              "value": "={{ 'isbn:' + $('ISBN Input1').first().json.isbn }}"
             },
             {
               "name": "key",
@@ -139,13 +139,13 @@
         },
         "options": {}
       },
-      "id": "google-books-search",
+      "id": "45cbe06c-73c8-4f1a-a61a-ab5bd05a01fc",
       "name": "Google Books Search",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        80,
-        150
+        -80,
+        48
       ],
       "notes": "Busca en Google Books si Open Library no lo encuentra"
     },
@@ -173,26 +173,26 @@
         },
         "options": {}
       },
-      "id": "check-google-found",
+      "id": "553aa60b-795f-4034-8e2e-17b1c6745e51",
       "name": "If Google Books",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        320,
-        150
+        160,
+        48
       ]
     },
     {
       "parameters": {
         "jsCode": "const item = ($json.items && $json.items.length > 0) ? $json.items[0] : {};\nconst info = item.volumeInfo || {};\n\nlet isbn = '';\ntry {\n  isbn = $('ISBN Input1').first().json.isbn;\n} catch (e) {\n  isbn = '';\n}\n\nconst title = info.title || 'Título desconocido';\nconst author = (info.authors && info.authors.length > 0) ? info.authors.join(', ') : 'Autor desconocido';\n\nlet year = 2024;\nif (info.publishedDate) {\n  const parsed = parseInt(info.publishedDate.substring(0, 4));\n  if (!isNaN(parsed)) year = parsed;\n}\n\nconst description = info.description || 'Sin descripción disponible.';\n\n// Portada segura en https\nlet coverUrl = '';\nif (info.imageLinks) {\n  const img = info.imageLinks.thumbnail || info.imageLinks.smallThumbnail || '';\n  coverUrl = img.replace('http://', 'https://');\n} else {\n  coverUrl = `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`;\n}\n\n// Mapeo de género según categorías de Google Books\nconst categories = info.categories || [];\nfunction mapGenre(cats) {\n  const genreMap = {\n    'thriller': 'Novela negra',\n    'mystery': 'Novela negra',\n    'suspense': 'Novela negra',\n    'crime': 'Novela negra',\n    'detective': 'Novela negra',\n    'fantasy': 'Fantasía',\n    'horror': 'Terror',\n    'science fiction': 'Ciencia ficción',\n    'sci-fi': 'Ciencia ficción',\n    'juvenile': 'Infantil',\n    'children': 'Infantil',\n    'infantil': 'Infantil',\n    'romance': 'Romance',\n    'history': 'Historia',\n    'historia': 'Historia',\n    'biography': 'Biografía',\n    'biografía': 'Biografía',\n    'poetry': 'Poesía',\n    'poesía': 'Poesía',\n    'drama': 'Teatro',\n    'teatro': 'Teatro',\n    'philosophy': 'Filosofía',\n    'filosofía': 'Filosofía',\n    'fiction': 'Novela',\n    'ficción': 'Novela'\n  };\n  for (const cat of cats) {\n    const lower = String(cat).toLowerCase();\n    for (const [key, value] of Object.entries(genreMap)) {\n      if (lower.includes(key)) return value;\n    }\n  }\n  return 'Novela';\n}\n\nconst genre = mapGenre(categories);\n\nreturn {\n  isbn: String(isbn),\n  title: title,\n  author: author,\n  year: Number(year) || 2024,\n  genre: genre,\n  coverUrl: coverUrl,\n  description: String(description).substring(0, 2000),\n  fechaEntrada: new Date().toISOString().split('T')[0]\n};"
       },
-      "id": "normalize-google",
+      "id": "c14fe492-83b4-4f81-a4cb-51c59c4536c2",
       "name": "Normalizar Google Books",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        560,
-        150
+        400,
+        48
       ]
     },
     {
@@ -244,13 +244,13 @@
         },
         "options": {}
       },
-      "id": "0ed20ee4-1014-4021-9119-0d8a6fdbabcc",
+      "id": "0dacdb30-181c-4472-af37-7c54d3ee1875",
       "name": "Crear en Notion1",
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2,
       "position": [
-        800,
-        0
+        640,
+        -112
       ],
       "credentials": {
         "notionApi": {
@@ -261,28 +261,28 @@
     },
     {
       "parameters": {
-        "jsCode": "const notionPage = $json;\n\n// Obtenemos los datos del libro que se hayan normalizado\nlet bookData = {};\ntry {\n  bookData = $('Normalizar Datos').first().json;\n} catch (e) {\n  try {\n    bookData = $('Normalizar Google Books').first().json;\n  } catch (err) {\n    bookData = {};\n  }\n}\n\nreturn {\n  success: true,\n  message: `Libro creado: ${bookData.title || 'Libro registrado'}`,\n  isbn: bookData.isbn || '',\n  author: bookData.author || '',\n  notionUrl: notionPage.url || 'URL no disponible',\n  genre: bookData.genre || '',\n  coverUrl: bookData.coverUrl || ''\n};"
+        "jsCode": "const notionPage = $json;\n\nlet bookData = {};\ntry {\n  if ($('Normalizar Datos').isExecuted) {\n    bookData = $('Normalizar Datos').first().json;\n  } else if ($('Normalizar Google Books').isExecuted) {\n    bookData = $('Normalizar Google Books').first().json;\n  }\n} catch (e) {\n  try {\n    bookData = $('Normalizar Google Books').first().json;\n  } catch (err) {\n    bookData = {};\n  }\n}\n\nreturn {\n  success: true,\n  message: `Libro creado: ${bookData.title || 'Libro registrado'}`,\n  isbn: bookData.isbn || '',\n  author: bookData.author || '',\n  notionUrl: notionPage.url || 'URL no disponible',\n  genre: bookData.genre || '',\n  coverUrl: bookData.coverUrl || ''\n};"
       },
-      "id": "50c2b48d-3c25-4209-96f6-4e97345433d4",
+      "id": "1c5c830e-3df2-46b6-87c1-6c3541f23dbb",
       "name": "Respuesta",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1040,
-        0
+        880,
+        -112
       ]
     },
     {
       "parameters": {
         "jsCode": "let isbn = '';\ntry {\n  isbn = $('ISBN Input1').first().json.isbn;\n} catch (e) {\n  isbn = 'Desconocido';\n}\n\nreturn {\n  success: false,\n  message: `No se encontró el libro con ISBN ${isbn} ni en Open Library ni en Google Books`,\n  isbn: isbn,\n  suggestion: 'Introduce los datos manualmente en Notion o comprueba el número de ISBN.'\n};"
       },
-      "id": "2df40711-38f9-4bf9-9450-9fbce22977a0",
+      "id": "843f1ac3-69e6-47ee-ba70-0715ad3a4e35",
       "name": "No Encontrado",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        560,
-        300
+        400,
+        288
       ]
     }
   ],
@@ -414,7 +414,6 @@
   },
   "pinData": {},
   "meta": {
-    "templateCredsSetupCompleted": true,
     "instanceId": "7015f53c13b946215c845053ff45d72754912e1d0516b199eb7fc7beb5cf1a38"
   }
 }

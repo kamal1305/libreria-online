@@ -55,31 +55,18 @@ async function main() {
     categoryIds[name] = row.id;
   }
 
-  // ── Ejemplares de demostracion (carrito usado) ─────────────────
-  const demoBooks = [
-    {
-      slug: "la-luz-de-las-horas",
-      title: "La luz de las horas",
-      author: "Clara Valdes",
-      price: 8.5,
-      condition: BookCondition.VERY_GOOD,
-      imageUrl: "https://placehold.co/600x900/e7dfcf/22302b?text=Libro+demo+01",
-      imageAlt: "Portada ficticia de La luz de las horas",
-      categorySlug: "narrativa",
-      amazonAffiliateUrl: null,
-    },
-    {
-      slug: "atlas-de-las-pequenas-cosas",
-      title: "Atlas de las pequenas cosas",
-      author: "Mateo Rios",
-      price: 6.25,
-      condition: BookCondition.GOOD,
-      imageUrl: "https://placehold.co/600x900/d8e2dc/22302b?text=Libro+demo+02",
-      imageAlt: "Portada ficticia de Atlas de las pequenas cosas",
-      categorySlug: "narrativa",
-      amazonAffiliateUrl: null,
-    },
-  ];
+  // ── Ejemplares de demostracion (limpio para inventario real) ──
+  const demoBooks: Array<{
+    slug: string;
+    title: string;
+    author: string;
+    price: number;
+    condition: BookCondition;
+    imageUrl: string;
+    imageAlt: string;
+    categorySlug: string;
+    amazonAffiliateUrl: string | null;
+  }> = [];
   for (const b of demoBooks) {
     const data = {
       title: b.title,

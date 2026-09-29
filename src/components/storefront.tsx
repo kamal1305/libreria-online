@@ -80,7 +80,6 @@ export function Storefront({
   const [condition, setCondition] = useState("Todas");
   const [category, setCategory] = useState("Todos");
   const [price, setPrice] = useState("Cualquier precio");
-  const [menuOpen, setMenuOpen] = useState(false);
   const { addItem, toggleCart } = useCart();
   const [visibleLimit, setVisibleLimit] = useState(8);
 
@@ -89,10 +88,20 @@ export function Storefront({
     setVisibleLimit(8);
   }, [query, category, condition, price]);
 
-  const categories = [
+  const defaultGenres = [
     "Todos",
-    ...Array.from(new Set(books.map((b) => b.category))),
+    "Novela negra",
+    "Romance",
+    "Fantasía",
+    "Juvenil",
+    "Clásicos",
+    "Novela histórica",
+    "Terror",
   ];
+  const categories =
+    books.length > 0
+      ? ["Todos", ...Array.from(new Set(books.map((b) => b.category)))]
+      : defaultGenres;
   const filteredBooks = useMemo(
     () =>
       books.filter((book) => {
@@ -136,14 +145,7 @@ export function Storefront({
       <Header
         query={query}
         onQueryChange={setQuery}
-        menuOpen={menuOpen}
-        onMenuToggle={() => setMenuOpen(!menuOpen)}
       />
-
-      {/* Mobile nav backdrop — rendered outside header to escape backdrop-filter containment */}
-      {menuOpen && (
-        <div className="nav-backdrop" onClick={() => setMenuOpen(false)} />
-      )}
 
       {/* Cart drawer handled globally by CartDrawer component */}
 
@@ -806,9 +808,58 @@ function BookGrid({
 }) {
   if (!books.length) {
     return (
-      <p className="empty-state" style={{ padding: "48px 0" }}>
-        No se encontraron libros con esos filtros.
-      </p>
+      <div
+        className="empty-catalog-card"
+        style={{
+          background: "white",
+          border: "1.5px dashed var(--line)",
+          borderRadius: "24px",
+          padding: "48px 24px",
+          textAlign: "center",
+          maxWidth: "600px",
+          margin: "0 auto",
+        }}
+      >
+        <div style={{ fontSize: "2.5rem", marginBottom: "12px" }}>📦📚</div>
+        <h3
+          style={{
+            fontFamily: "var(--font-display)",
+            fontSize: "1.45rem",
+            fontWeight: 600,
+            color: "var(--charcoal-soft)",
+            margin: "0 0 10px",
+          }}
+        >
+          Nuevas lecturas en preparación
+        </h3>
+        <p
+          style={{
+            fontSize: "0.92rem",
+            color: "var(--text)",
+            lineHeight: 1.6,
+            margin: "0 auto 20px",
+            maxWidth: "460px",
+          }}
+        >
+          Estamos preparando y catalogando el nuevo inventario de libros físicos seleccionados para la venta. Muy pronto estarán disponibles para su compra directa con recogida en Jerez y envíos a la península.
+        </p>
+        <a
+          href="https://wa.me/34657053233?text=Hola%2C%20quer%C3%ADa%20preguntar%20por%20un%20libro%20en%20M%C3%A1s%20que%20libros%20%E2%98%95%F0%9F%93%96"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="used-book-button"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "10px 22px",
+            fontSize: "0.88rem",
+          }}
+        >
+          <span>Consultar o encargar libro por WhatsApp</span>
+          <span aria-hidden="true">↗</span>
+        </a>
+      </div>
     );
   }
   return (

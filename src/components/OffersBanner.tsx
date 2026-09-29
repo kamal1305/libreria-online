@@ -32,7 +32,7 @@ export function OffersBanner() {
             ))}
           </div>
           <Link href="#catalogo" className="offer-button">
-            EXPLORAR LOS 130 LIBROS
+            EXPLORAR CATÁLOGO
           </Link>
         </div>
       </div>

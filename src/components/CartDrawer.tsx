@@ -27,10 +27,38 @@ export function CartDrawer() {
   const [customerName, setCustomerName] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
   const [showAddressForm, setShowAddressForm] = useState(false);
+  const [orderReserved, setOrderReserved] = useState(false);
 
   if (!cartOpen) return null;
 
   const whatsappUrl = generateWhatsAppOrderUrl(customerName, customerAddress);
+
+  const handleWhatsAppClick = () => {
+    setOrderReserved(true);
+    try {
+      fetch("/api/orders/reserve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName,
+          customerAddress,
+          deliveryMethod,
+          total,
+          items: items.map((it) => ({
+            id: it.id,
+            slug: it.slug,
+            title: it.title,
+            author: it.author,
+            price: it.price,
+            sku: it.id?.startsWith("SVL") ? it.id : undefined,
+          })),
+        }),
+        keepalive: true,
+      }).catch((err) => console.warn("Aviso al registrar pedido en Notion:", err));
+    } catch {
+      // Asegurar que nunca bloquee la navegación
+    }
+  };
 
   return (
     <>
@@ -247,11 +275,31 @@ export function CartDrawer() {
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={handleWhatsAppClick}
                 className="whatsapp-order-button"
               >
                 <MessageCircle size={20} />
                 <span>Finalizar pedido por WhatsApp</span>
               </a>
+
+              {orderReserved && (
+                <p
+                  style={{
+                    fontSize: ".75rem",
+                    color: "var(--sage)",
+                    fontWeight: 700,
+                    textAlign: "center",
+                    margin: "8px 0 2px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "6px",
+                  }}
+                >
+                  <span>✓</span>
+                  <span>Ejemplar reservado en Notion para tu pedido</span>
+                </p>
+              )}
 
               <div className="cart-payment-badges" style={{ margin: "10px 0 6px", textAlign: "center" }}>
                 <p style={{ margin: "0 0 4px", fontSize: ".76rem", fontWeight: 700, color: "var(--charcoal-soft)" }}>
