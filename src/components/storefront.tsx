@@ -21,6 +21,12 @@ import { useCart } from "@/lib/cart-context";
 import { Footer } from "@/components/Footer";
 import { OffersBanner } from "@/components/OffersBanner";
 import { CategoryIconNav } from "@/components/CategoryIconNav";
+import {
+  MACRO_CATEGORIES,
+  CATEGORY_SHORT_NAMES,
+  getMacroCategory,
+  matchesCategory,
+} from "@/lib/genres";
 
 type StoreBook = {
   id: string;
@@ -88,20 +94,15 @@ export function Storefront({
     setVisibleLimit(8);
   }, [query, category, condition, price]);
 
-  const defaultGenres = [
-    "Todos",
-    "Novela negra",
-    "Romance",
-    "Fantasía",
-    "Juvenil",
-    "Clásicos",
-    "Novela histórica",
-    "Terror",
-  ];
-  const categories =
-    books.length > 0
-      ? ["Todos", ...Array.from(new Set(books.map((b) => b.category)))]
-      : defaultGenres;
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { Todos: books.length };
+    for (const b of books) {
+      const cat = getMacroCategory(b.category);
+      counts[cat] = (counts[cat] || 0) + 1;
+    }
+    return counts;
+  }, [books]);
+
   const filteredBooks = useMemo(
     () =>
       books.filter((book) => {
@@ -111,13 +112,12 @@ export function Storefront({
         const matchesCondition =
           condition === "Todas" ||
           conditionLabels[book.condition] === condition;
-        const matchesCategory =
-          category === "Todos" || book.category === category;
+        const matchesCategoryFilter = matchesCategory(book.category, category);
         const matchesPrice =
           price === "Cualquier precio" ||
           (price === "Menos de 8 EUR" ? book.price < 8 : book.price >= 8);
         return (
-          matchesQuery && matchesCondition && matchesCategory && matchesPrice
+          matchesQuery && matchesCondition && matchesCategoryFilter && matchesPrice
         );
       }),
     [books, category, condition, price, query]
@@ -177,14 +177,27 @@ export function Storefront({
               <button type="submit">Buscar</button>
             </form>
 
-            <div className="hero-pills">
-              {categories.map((item) => (
+            <div className="hero-suggestions">
+              <span className="hero-suggestions-label">Temáticas:</span>
+              {(
+                [
+                  "Novela negra & Thriller",
+                  "Novela histórica",
+                  "Juvenil & Infantil",
+                  "Clásicos & Teatro",
+                  "Romántica & Pasión",
+                ] as const
+              ).map((item) => (
                 <button
                   key={item}
-                  className={category === item ? "active" : ""}
-                  onClick={() => setCategory(item)}
+                  type="button"
+                  className={`hero-suggestion-pill${category === item ? " active" : ""}`}
+                  onClick={() => {
+                    setCategory(item);
+                    scrollToCatalog();
+                  }}
                 >
-                  {item}
+                  {CATEGORY_SHORT_NAMES[item]}
                 </button>
               ))}
             </div>
@@ -206,9 +219,9 @@ export function Storefront({
           CATEGORY GRID
       ═══════════════════════════════════════════════════════════ */}
       <CategoryIconNav
-        categories={categories}
         activeCategory={category}
         onSelectCategory={setCategory}
+        categoryCounts={categoryCounts}
       />
 
       {/* ═══════════════════════════════════════════════════════════
@@ -504,8 +517,10 @@ export function Storefront({
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
               >
-                {categories.map((item) => (
-                  <option key={item}>{item}</option>
+                {MACRO_CATEGORIES.map((item) => (
+                  <option key={item} value={item}>
+                    {item} {categoryCounts[item] !== undefined ? `(${categoryCounts[item]})` : ""}
+                  </option>
                 ))}
               </select>
             </label>

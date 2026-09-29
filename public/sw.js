@@ -1,5 +1,5 @@
 // Service Worker - Más que libros · Páginas y café
-const CACHE_NAME = 'mas-que-libros-pwa-v2';
+const CACHE_NAME = 'mas-que-libros-pwa-v3';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
