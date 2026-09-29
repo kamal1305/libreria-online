@@ -38,6 +38,9 @@ export default async function AdminPage() {
               flexWrap: "wrap",
             }}
           >
+            <Link href="/escanear" className="offer-button" style={{ background: "var(--rose-deep, #9E2A2B)", color: "#FFFFFF" }}>
+              ⚡ Escáner de libros (Pistola USB / Mac)
+            </Link>
             <Link href="/admin/resenas" className="offer-button">
               Gestionar reseñas editoriales
             </Link>
