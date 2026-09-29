@@ -20,7 +20,10 @@ export function PwaManager() {
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("/sw.js")
-        .then((reg) => console.log("PWA Service Worker registrado con éxito:", reg.scope))
+        .then((reg) => {
+          reg.update();
+          console.log("PWA Service Worker registrado con éxito:", reg.scope);
+        })
         .catch((err) => console.log("Service Worker registro error:", err));
     }
 

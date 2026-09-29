@@ -40,25 +40,36 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
 
-  // Network first with cache fallback for pages
-  if (event.request.mode === 'navigate') {
+  // Network first with cache fallback for pages and Next.js assets
+  if (event.request.mode === 'navigate' || url.pathname.startsWith('/_next/')) {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request).then(res => res || caches.match('/')))
+      fetch(event.request).catch(() =>
+        caches.match(event.request).then((res) => res || (event.request.mode === 'navigate' ? caches.match('/') : null))
+      )
     );
     return;
   }
 
   // Cache first for static images and covers
-  if (url.pathname.startsWith('/icons/') || url.pathname.startsWith('/covers/') || url.pathname.endsWith('.svg') || url.pathname.endsWith('.jpg') || url.pathname.endsWith('.png')) {
+  if (
+    url.pathname.startsWith('/icons/') ||
+    url.pathname.startsWith('/covers/') ||
+    url.pathname.endsWith('.svg') ||
+    url.pathname.endsWith('.jpg') ||
+    url.pathname.endsWith('.png')
+  ) {
     event.respondWith(
       caches.match(event.request).then((cached) => {
-        return cached || fetch(event.request).then((networkRes) => {
-          if (networkRes.status === 200) {
-            const resClone = networkRes.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
-          }
-          return networkRes;
-        });
+        return (
+          cached ||
+          fetch(event.request).then((networkRes) => {
+            if (networkRes.status === 200) {
+              const resClone = networkRes.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
+            }
+            return networkRes;
+          })
+        );
       })
     );
     return;
@@ -66,6 +77,6 @@ self.addEventListener('fetch', (event) => {
 
   // Standard fetch
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    fetch(event.request).catch(() => caches.match(event.request))
   );
 });
