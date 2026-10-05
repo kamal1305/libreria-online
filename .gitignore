@@ -23,6 +23,8 @@
 # misc
 .DS_Store
 *.pem
+*.zip
+LEEME_LIBRERIA_PARA_ANTIGRAVITY.md
 
 # debug
 npm-debug.log*

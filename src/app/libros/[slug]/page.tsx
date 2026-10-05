@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { demoBooks } from "@/lib/demo-data";
 import { BookDetailActions } from "@/components/BookDetailActions";
+import { BookCover } from "@/components/BookCover";
 
 const conditionLabels: Record<string, string> = {
   LIKE_NEW: "Como nuevo",
@@ -92,13 +93,15 @@ export default async function BookDetail({
               position: "relative",
             }}
           >
-            <Image
-              src={book.imageUrl ?? "/images/libro-ejemplo.jpg"}
-              alt={book.imageAlt ?? "Portada del libro"}
+            <BookCover
+              title={book.title}
+              author={book.author}
+              imageUrl={book.imageUrl}
+              imageAlt={book.imageAlt}
               width={600}
               height={900}
-              unoptimized
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              eager
+              imgClassName="book-detail-img"
             />
           </div>
         </div>

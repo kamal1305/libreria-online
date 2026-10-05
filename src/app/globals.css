@@ -622,6 +622,19 @@ img { display: block; max-width: 100%; }
   position: absolute;
   width: 100%;
 }
+/* Fallback de marca cuando no hay imagen de cabecera */
+.hero-feature-fallback {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  background:
+    radial-gradient(ellipse 80% 60% at 70% 20%, rgba(238,176,176,0.35), transparent 70%),
+    radial-gradient(ellipse 70% 55% at 20% 85%, rgba(143,164,145,0.4), transparent 70%),
+    linear-gradient(150deg, #4F6352 0%, #3C3733 100%);
+  color: #FAF7F2; text-align: center; padding: 4.5rem 2rem 2rem;
+}
+.hero-fallback-mark { font-size: 3rem; color: #EBF1EC; margin-bottom: 0.5rem; }
+.hero-fallback-title { font-family: var(--font-display); font-size: 2rem; font-weight: 600; }
+.hero-fallback-sub { font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase; color: #DFCCB2; margin-top: 0.5rem; }
 .hero-badge {
   background: white;
   border-radius: 999px;
@@ -734,6 +747,56 @@ img { display: block; max-width: 100%; }
   transition: transform var(--duration-slow) var(--ease-out);
 }
 .book-card:hover .book-cover-image { transform: scale(1.04); }
+.book-detail-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Portada generada cuando el libro no tiene imagen (elegante, de marca) */
+.book-placeholder {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 18% 12%;
+  overflow: hidden;
+}
+.book-placeholder::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 90% 60% at 50% 0%, rgba(255,255,255,0.14), transparent 70%);
+  pointer-events: none;
+}
+.book-placeholder-frame {
+  position: absolute; inset: 10px;
+  border: 1.5px solid; border-radius: 4px; opacity: 0.55;
+  pointer-events: none;
+}
+.book-placeholder-mark { font-size: 1.4rem; margin-bottom: 10px; opacity: 0.9; }
+.book-placeholder-title {
+  font-family: var(--font-display); font-weight: 600;
+  font-size: clamp(0.95rem, 2.4vw, 1.15rem); line-height: 1.25;
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+  margin-bottom: 8px;
+}
+.book-placeholder-author {
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  margin-bottom: auto;
+}
+.book-placeholder-brand {
+  font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.75;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANIMACIONES — capa moderna estilo Arc UI (Más que libros)
+   ═══════════════════════════════════════════════════════════════ */
+.mq-reveal { opacity: 0; transform: translateY(22px); filter: blur(6px); transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22,1,0.36,1), filter 0.7s ease; }
+.mq-reveal-visible { opacity: 1; transform: none; filter: blur(0); }
+.mq-words .mq-word { display: inline-block; opacity: 0; filter: blur(8px); transform: translateY(10px); transition: opacity 0.55s ease, filter 0.55s ease, transform 0.55s cubic-bezier(0.22,1,0.36,1); }
+.mq-words.mq-words-on .mq-word { opacity: 1; filter: blur(0); transform: none; }
+/* Flotación suave de la tarjeta destacada del hero */
+.hero-feature { animation: hero-float 7s ease-in-out infinite; }
+@keyframes hero-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+/* Tilt 3D sutil en tarjetas de libro (lo activa el JS por delegación) */
+.book-card { transform-style: preserve-3d; }
+@media (prefers-reduced-motion: reduce) {
+  .mq-reveal { opacity: 1; transform: none; filter: none; transition: none; }
+  .mq-words .mq-word { opacity: 1; filter: none; transform: none; transition: none; }
+  .hero-feature { animation: none; }
+}
 .status-badge {
   background: white;
   color: var(--rose-deep);

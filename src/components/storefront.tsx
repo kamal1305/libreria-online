@@ -17,6 +17,8 @@ import {
   X,
 } from "lucide-react";
 import { Header } from "@/components/Header";
+import { BookCover } from "@/components/BookCover";
+import { Reveal, WordReveal, CountUp } from "@/components/anim";
 import { useCart } from "@/lib/cart-context";
 import { Footer } from "@/components/Footer";
 import { OffersBanner } from "@/components/OffersBanner";
@@ -94,6 +96,40 @@ export function Storefront({
     setVisibleLimit(8);
   }, [query, category, condition, price]);
 
+  // Tilt 3D sutil en las tarjetas de libro (solo puntero fino, sin reduced-motion)
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!window.matchMedia("(pointer: fine)").matches) return;
+    let raf = 0;
+    let cur: HTMLElement | null = null;
+    const onMove = (e: MouseEvent) => {
+      const t = e.target as HTMLElement | null;
+      const card = t && t.closest ? (t.closest(".book-card") as HTMLElement | null) : null;
+      if (card !== cur) {
+        if (cur) cur.style.transform = "";
+        cur = card;
+      }
+      if (!card) return;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const r = card.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5;
+        const y = (e.clientY - r.top) / r.height - 0.5;
+        card.style.transform = `perspective(900px) rotateX(${(-y * 4).toFixed(2)}deg) rotateY(${(x * 5).toFixed(2)}deg) translateY(-4px)`;
+      });
+    };
+    const onLeave = () => {
+      if (cur) { cur.style.transform = ""; cur = null; }
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseleave", onLeave, true);
+    return () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseleave", onLeave, true);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = { Todos: books.length };
     for (const b of books) {
@@ -158,7 +194,7 @@ export function Storefront({
           <div className="hero-content md:col-span-6">
             <p className="eyebrow">UNA SEGUNDA VIDA PARA CADA HISTORIA</p>
             <h1>
-              Historias que aún tienen mucho que <em>decir</em>.
+              <WordReveal text="Historias que aún tienen mucho que" accent="decir." />
             </h1>
             <p className="hero-subtitle">
               Libros usados escogidos en Jerez, descritos sin rodeos, junto a
@@ -487,12 +523,12 @@ export function Storefront({
         className="catalog-section mx-auto max-w-7xl scroll-mt-10 px-5 py-16 lg:px-8"
       >
         <div className="section-header">
-          <div>
+          <Reveal>
             <p className="eyebrow">EXPLORA LA ESTANTERÍA</p>
             <h2>Libros de segunda mano</h2>
-          </div>
+          </Reveal>
           <span className="result-count">
-            {filteredBooks.length} ejemplares
+            <CountUp key={filteredBooks.length} to={filteredBooks.length} /> ejemplares
           </span>
         </div>
 
@@ -880,16 +916,17 @@ function BookGrid({
   return (
     <div className="book-grid">
       {books.map((book, index) => (
-        <article className="book-card" key={book.id}>
+        <Reveal as="article" className="book-card" key={book.id} delay={(index % 4) * 70}>
           <Link href={`/libros/${book.slug}`} className="book-cover" aria-label={`Ver ${book.title}`}>
-            <Image
-              src={book.imageUrl ?? "/images/libro-ejemplo.jpg"}
-              alt={book.imageAlt ?? "Portada de libro"}
+            <BookCover
+              title={book.title}
+              author={book.author}
+              imageUrl={book.imageUrl}
+              imageAlt={book.imageAlt}
               width={300}
               height={450}
-              priority={index === 0}
-              unoptimized
-              className="book-cover-image"
+              eager={index === 0}
+              imgClassName="book-cover-image"
             />
             <span className="status-badge">
               {conditionLabels[book.condition]}
@@ -924,7 +961,7 @@ function BookGrid({
               </a>
             )}
           </div>
-        </article>
+        </Reveal>
       ))}
     </div>
   );
@@ -937,16 +974,28 @@ function HeroFeature({
   book?: StoreBook;
   onAdd: (book: StoreBook) => void;
 }) {
+  const [heroImgOk, setHeroImgOk] = useState(true);
+  const heroImgRef = useRef<HTMLImageElement | null>(null);
+  useEffect(() => {
+    const img = heroImgRef.current;
+    if (img && img.complete && img.naturalWidth === 0) setHeroImgOk(false);
+  }, []);
   return (
     <div className="hero-feature soft-dots">
-      <img
-        src="/hero-banner.jpg"
-        alt="Mesa cálida con libros y un café"
-        onError={(e) => {
-          e.currentTarget.src =
-            "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=1200&q=85";
-        }}
-      />
+      {heroImgOk ? (
+        <img
+          ref={heroImgRef}
+          src="/hero-banner.jpg"
+          alt="Mesa cálida con libros y un café"
+          onError={() => setHeroImgOk(false)}
+        />
+      ) : (
+        <div className="hero-feature-fallback" aria-hidden="true">
+          <span className="hero-fallback-mark">❦</span>
+          <span className="hero-fallback-title">Más que libros</span>
+          <span className="hero-fallback-sub">Páginas y café · Jerez</span>
+        </div>
+      )}
       <span className="hero-badge">Novedades de la semana</span>
       <div className="hero-feature-copy">
         {book ? (
